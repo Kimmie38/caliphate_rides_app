@@ -64,7 +64,7 @@ export default function ChooseVehicle() {
       <ChoiceRow
         label="Do you own this vehicle?"
         value={application.vehicle.ownsVehicle ? "yes" : "no"}
-        options={[{ value: "yes", label: "Yes, it's mine" }, { value: "no", label: "No, I drive for the owner" }]}
+        options={[{ value: "yes", label: "Yes, It's M ine" }, { value: "no", label: "No, Owner's Driver" }]}
         onChange={(x) => update((a) => ({ ...a, vehicle: { ...a.vehicle, ownsVehicle: x === "yes" } }))}
       />
       {!application.vehicle.ownsVehicle ? (

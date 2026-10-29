@@ -10,10 +10,16 @@ const CAMERA_WHY = "Caliphate Rides uses the camera when you sign up to drive, t
 const PHOTOS_WHY = "Caliphate Rides lets drivers choose photos of their licence and vehicle papers.";
 
 const config: ExpoConfig = {
+  owner: "caliphate-rides",
   name: "Caliphate Rides",
-  slug: "caliphate-rides",
+  slug: "caliphate-rides-vbtpdtokyvfx68ngrk-p",
   scheme: "caliphaterides",
   version: "0.1.0",
+  extra: {
+    eas: {
+      projectId: "4beed4dd-1be5-42ce-87f7-4a809fdc5eef",
+    },
+  },
   orientation: "portrait",
   icon: "./assets/icon.png",
   userInterfaceStyle: "automatic",
