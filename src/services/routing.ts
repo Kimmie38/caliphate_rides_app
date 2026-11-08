@@ -14,11 +14,22 @@ const TIMEOUT_MS = 7000;
  * same routing server, so riders and drivers always see the same distance and price.
  */
 export async function getRoute(from: LatLng, to: LatLng): Promise<RouteResult> {
+  const primary = await osrmRoute(ENV.routingUrl, from, to);
+  if (primary) return primary;
+  // Our server only knows Sokoto (and may be waking up): try the public one before estimating.
+  if (ENV.routingFallbackUrl && ENV.routingFallbackUrl !== ENV.routingUrl) {
+    const fallback = await osrmRoute(ENV.routingFallbackUrl, from, to);
+    if (fallback) return fallback;
+  }
+  return estimateRoute(from, to);
+}
+
+async function osrmRoute(base: string, from: LatLng, to: LatLng): Promise<RouteResult | null> {
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), TIMEOUT_MS);
   try {
     const coords = `${from.longitude},${from.latitude};${to.longitude},${to.latitude}`;
-    const res = await fetch(`${ENV.routingUrl}/route/v1/driving/${coords}?overview=full&geometries=geojson&alternatives=false&steps=false`, { signal: ctrl.signal });
+    const res = await fetch(`${base}/route/v1/driving/${coords}?overview=full&geometries=geojson&alternatives=false&steps=false`, { signal: ctrl.signal });
     const json = await res.json();
     const route = json?.code === "Ok" ? json.routes?.[0] : null;
     const line: [number, number][] | undefined = route?.geometry?.coordinates;
@@ -31,11 +42,11 @@ export async function getRoute(from: LatLng, to: LatLng): Promise<RouteResult> {
       };
     }
   } catch {
-    // offline or server down: fall through to the estimate
+    // offline or server down
   } finally {
     clearTimeout(timer);
   }
-  return estimateRoute(from, to);
+  return null;
 }
 
 /** Close to typical road distance in a grid-like city, for when routing is unavailable. */

@@ -13,7 +13,7 @@ import { Sheet } from "../../src/components/Sheet";
 import { Button, IconButton, MapButton, tap, Txt } from "../../src/components/ui";
 import { haversineKm } from "../../src/lib/geo";
 import { isInApp, paymentOption } from "../../src/lib/payments";
-import { formatNaira, type RideTypeId } from "../../src/lib/pricing";
+import { fareBreakdown, formatNaira, type RideTypeId } from "../../src/lib/pricing";
 import { getWallet } from "../../src/services/rides";
 import { useRide } from "../../src/store/ride";
 import { useTheme } from "../../src/theme/ThemeProvider";
@@ -118,7 +118,7 @@ export default function Confirm() {
 
             {q ? (
               <Txt variant="caption" color="muted" tabular style={{ fontFamily: typeScale.bodyStrong.fontFamily }}>
-                {q.distanceKm.toFixed(1)} km × {formatNaira(q.ratePerKm)} per km = {formatNaira(q.fare)}
+                {fareBreakdown(q)} = {formatNaira(q.fare)}
               </Txt>
             ) : null}
 

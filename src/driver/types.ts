@@ -12,11 +12,14 @@ export type { Place };
 // ---------------- Official onboarding record ----------------
 
 export type DocumentKind =
-  | "licence"
+  | "licence" // driver's licence or learner's permit
+  | "proof_of_address"
   | "selfie"
   | "vehicle_photo"
   | "vehicle_licence"
   | "ownership"
+  | "owner_letter" // driving someone else's vehicle: the owner's signed authorisation
+  | "owner_id" // ... and the owner's government ID
   | "roadworthiness"
   | "insurance"
   | "operating_permit";
@@ -26,6 +29,8 @@ export type DocumentStatus = "missing" | "pending" | "approved" | "rejected";
 /** One version of a document. Every upload is kept, so the record shows what was submitted and when. */
 export type DocumentVersion = {
   files: string[]; // photo URIs (front/back for the licence)
+  /** Which kind of document it is, when there's a choice (e.g. "Learner's permit", "International passport"). */
+  variant?: string;
   number?: string; // licence number, policy number…
   expiry?: string; // YYYY-MM-DD
   uploadedAt: string; // ISO
@@ -65,7 +70,13 @@ export type DriverApplication = {
   };
   vehicle: { make: string; model: string; year: string; colour: string; plate: string; ownsVehicle: boolean };
   guarantor: { fullName: string; phone: string; relationship: string; address: string };
-  bank: { bankName: string; accountNumber: string; accountName: string };
+  /** Only when the driver drives someone else's vehicle (vehicle.ownsVehicle = false). */
+  owner: { fullName: string; phone: string; email: string; address: string };
+  bank: {
+    bankName: string; accountNumber: string; accountName: string;
+    /** Set once the bank has confirmed whose account it is (backend only). */
+    verifiedName?: string; verified?: boolean; verifyError?: string;
+  };
   documents: Partial<Record<DocumentKind, DriverDocument>>;
   declaration?: { signedName: string; signedAt: string };
   reviewNote?: string;
@@ -87,8 +98,15 @@ export type RideRequest = {
   rideType: VehicleType;
   distanceKm: number;
   durationMin: number;
+  baseFare?: number;
   ratePerKm: number;
+  minimumFare?: number;
+  /** What the rider pays */
   fare: number;
+  /** Caliphate Rides' share (commission %), and what's left for the driver */
+  commissionPercent: number;
+  commission: number;
+  driverEarning: number;
   paymentMethod: PaymentMethod;
   route: LatLng[];
   expiresAt: number; // ms timestamp
@@ -108,6 +126,49 @@ export type EarningsTrip = {
   rideType: VehicleType;
   distanceKm: number;
   fare: number;
+  commission?: number;
+  driverEarning?: number;
   paymentMethod: PaymentMethod;
+  paymentStatus?: "pending" | "paid";
   completedAt: string;
+};
+
+// ---------------- Money ----------------
+
+/**
+ * One movement in the driver's balance (amount > 0 = money for the driver).
+ * fare: rider paid in the app · commission: Caliphate Rides' share of a trip · withdrawal: sent to the bank ·
+ * withdrawal_returned: a payout failed · payment: the driver paid what they owed · adjustment: a correction
+ */
+export type LedgerEntry = {
+  id: string;
+  kind: "fare" | "commission" | "withdrawal" | "withdrawal_returned" | "payment" | "adjustment";
+  label: string;
+  amount: number;
+  balanceAfter?: number;
+  at: string;
+};
+
+export type Withdrawal = {
+  id: string;
+  amount: number;
+  status: "processing" | "successful" | "failed";
+  bankName: string;
+  accountEnding: string;
+  failureReason?: string;
+  createdAt: string;
+  completedAt?: string;
+};
+
+/** GET /driver/wallet */
+export type DriverWallet = {
+  /** > 0: can be withdrawn. < 0: commission the driver owes. */
+  balance: number;
+  owed: number;
+  /** Owes more than the limit: can't go online until they pay. */
+  blocked: boolean;
+  settings: { commissionPercent: number; owedLimit: number; minWithdrawal: number };
+  bank: { bankName: string; accountEnding: string; verifiedName?: string; canWithdraw: boolean; problem?: string };
+  ledger: LedgerEntry[];
+  withdrawals: Withdrawal[];
 };

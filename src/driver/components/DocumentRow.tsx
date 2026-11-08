@@ -30,10 +30,11 @@ export function DocumentRow({ req, doc, required, actionLabel }: { req: Document
       onPress={() => { tap(); router.push({ pathname: "/driver/document/[kind]", params: { kind: req.kind } }); }}
       style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", gap: 14, paddingVertical: 13, paddingHorizontal: 14, backgroundColor: pressed ? colors.mist : "transparent" })}
     >
-      <Badge icon={req.kind === "licence" ? "idcard" : req.kind === "selfie" ? "person" : req.kind === "insurance" ? "shield" : "document"}
+      <Badge icon={req.kind === "licence" || req.kind === "owner_id" ? "idcard" : req.kind === "selfie" ? "person" : req.kind === "insurance" ? "shield" : req.kind === "proof_of_address" ? "home" : "document"}
         tone={pill.tone === "green" ? "green" : pill.tone === "amber" ? "market" : pill.tone === "red" ? "health" : "transport"} size={42} />
       <View style={{ flex: 1, minWidth: 0, gap: 4 }}>
         <Txt variant="bodyStrong">{req.title}</Txt>
+        {v?.variant ? <Txt variant="caption" color="muted">{v.variant}</Txt> : null}
         <View style={{ flexDirection: "row", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
           <Pill text={pill.text} tone={pill.tone} />
           {v?.expiry ? <Txt variant="caption" color="muted">Expires {prettyDate(v.expiry)}</Txt> : null}

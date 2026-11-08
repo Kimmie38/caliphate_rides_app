@@ -22,6 +22,7 @@ export function emptyApplication(recordId = ""): DriverApplication {
     personal: { fullName: "", dateOfBirth: "", gender: "", address: "", lga: "", nin: "", email: "" },
     vehicle: { make: "", model: "", year: "", colour: "", plate: "", ownsVehicle: true },
     guarantor: { fullName: "", phone: "", relationship: "", address: "" },
+    owner: { fullName: "", phone: "", email: "", address: "" },
     bank: { bankName: "", accountNumber: "", accountName: "" },
     documents: {},
     timeline: [],
@@ -43,34 +44,38 @@ async function mockSave(app: DriverApplication) {
   return app;
 }
 
+/** Fills fields added in later versions of the app (e.g. owner details) on older saved records. */
+const withDefaults = (a: DriverApplication): DriverApplication => ({ ...a, owner: { ...emptyApplication().owner, ...(a.owner ?? {}) } });
+
 export async function getApplication(): Promise<DriverApplication> {
   if (ENV.useMock) {
     const existing = await mockLoad();
-    if (existing) return existing;
+    if (existing) return withDefaults(existing);
     const fresh = emptyApplication(newRecordId());
     fresh.timeline.push(ev("Application started"));
     return mockSave(fresh);
   }
   const r = await api<{ application: DriverApplication | null }>("/drivers/me/application");
-  return r.application ?? emptyApplication();
+  return r.application ? withDefaults(r.application) : emptyApplication();
 }
 
 /** Saves the editable fields (not documents, status or timeline, which the server controls). */
 export async function saveDraft(app: DriverApplication): Promise<DriverApplication> {
   if (ENV.useMock) return mockSave(app);
-  const { personal, vehicle, guarantor, bank, vehicleType } = app;
-  return (await api<{ application: DriverApplication }>("/drivers/me/application", { method: "PUT", body: { personal, vehicle, guarantor, bank, vehicleType } })).application;
+  const { personal, vehicle, guarantor, owner, bank, vehicleType } = app;
+  return (await api<{ application: DriverApplication }>("/drivers/me/application", { method: "PUT", body: { personal, vehicle, guarantor, owner, bank, vehicleType } })).application;
 }
 
 /** Uploads a new version of a document. Approved drivers' updates go back to review. */
 export async function uploadDocument(
   app: DriverApplication,
   kind: DocumentKind,
-  input: { files: string[]; number?: string; expiry?: string }
+  input: { files: string[]; number?: string; expiry?: string; variant?: string }
 ): Promise<DriverApplication> {
   if (!ENV.useMock) {
     const form = new FormData();
     form.append("kind", kind);
+    if (input.variant) form.append("variant", input.variant);
     if (input.number) form.append("number", input.number);
     if (input.expiry) form.append("expiry", input.expiry);
     input.files.forEach((uri, i) => form.append("files", { uri, name: `${kind}-${i + 1}.jpg`, type: "image/jpeg" } as any));
@@ -80,7 +85,7 @@ export async function uploadDocument(
     return data.application;
   }
   await wait(700);
-  const version: DocumentVersion = { files: input.files, number: input.number, expiry: input.expiry, uploadedAt: now(), status: "pending" };
+  const version: DocumentVersion = { files: input.files, variant: input.variant, number: input.number, expiry: input.expiry, uploadedAt: now(), status: "pending" };
   const prev = app.documents[kind];
   const isUpdate = !!prev?.current && app.status !== "draft";
   const next: DriverApplication = {
@@ -142,7 +147,7 @@ export async function resetMockApplication() {
 function labelFor(kind: DocumentKind) {
   const map: Record<DocumentKind, string> = {
     licence: "Driver's licence", selfie: "Profile photo", vehicle_photo: "Vehicle photo", vehicle_licence: "Vehicle licence",
-    ownership: "Proof of ownership", roadworthiness: "Roadworthiness certificate", insurance: "Insurance certificate", operating_permit: "Operating permit",
+    ownership: "Proof of ownership", proof_of_address: "Proof of address", owner_letter: "Owner's letter", owner_id: "Owner's ID", roadworthiness: "Roadworthiness certificate", insurance: "Insurance certificate", operating_permit: "Operating permit",
   };
   return map[kind];
 }

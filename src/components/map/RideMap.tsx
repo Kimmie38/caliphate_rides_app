@@ -2,14 +2,15 @@ import type { CameraRef, LngLat } from "@maplibre/maplibre-react-native";
 import React, { forwardRef, useImperativeHandle, useMemo, useRef } from "react";
 import { StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { ENV } from "../../config/env";
 import { serviceCenter } from "../../lib/area";
 import type { LatLng } from "../../lib/geo";
+import { mapSourcesFor } from "../../map/sources";
 import { buildMapStyle } from "../../map/style";
 import { tint, type TintName } from "../../theme/tints";
 import { useTheme } from "../../theme/ThemeProvider";
 import { MAP_ENGINE, MLRN } from "./engine";
 import { placesGeoJSON } from "./mapPlaces";
+import { usePlacesVersion } from "../../data/landmarks";
 import type { Insets, RideMapHandle, RideMapProps } from "./types";
 import { WebRideMap } from "./WebRideMap";
 
@@ -35,10 +36,12 @@ const NativeRideMap = forwardRef<RideMapHandle, RideMapProps>(function NativeRid
   const insets = useSafeAreaInsets();
   const camera = useRef<CameraRef>(null);
 
+  // Our Sokoto map in and around Sokoto; the public map elsewhere (testing in another city).
+  const sources = mapSourcesFor(center ?? serviceCenter());
   const mapStyle = useMemo(() => {
     const tints = Object.fromEntries(TINTS.map((t) => [t, tint(t, isDark)]));
-    return buildMapStyle(colors, tints, isDark, { tilesUrl: ENV.mapTilesUrl, glyphsUrl: ENV.mapGlyphsUrl });
-  }, [colors, isDark]);
+    return buildMapStyle(colors, tints, isDark, sources);
+  }, [colors, isDark, sources]);
 
   // The camera only takes the starting view once; after that screens move it with frame().
   const initial = useRef(center ?? serviceCenter());
@@ -88,7 +91,8 @@ const NativeRideMap = forwardRef<RideMapHandle, RideMapProps>(function NativeRid
 function SokotoPlaces() {
   const { GeoJSONSource, Layer } = MLRN!;
   const { isDark, colors } = useTheme();
-  const data = useMemo(() => placesGeoJSON(isDark), [isDark]);
+  const placesVersion = usePlacesVersion();
+  const data = useMemo(() => placesGeoJSON(isDark), [isDark, placesVersion]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <GeoJSONSource id="sokoto-places" data={data}>
       <Layer id="sokoto-places-dot" type="circle" minzoom={11}

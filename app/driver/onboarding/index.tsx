@@ -64,11 +64,16 @@ export default function ChooseVehicle() {
       <ChoiceRow
         label="Do you own this vehicle?"
         value={application.vehicle.ownsVehicle ? "yes" : "no"}
-        options={[{ value: "yes", label: "Yes, It's M ine" }, { value: "no", label: "No, Owner's Driver" }]}
+        options={[{ value: "yes", label: "Yes, it's mine" }, { value: "no", label: "No, I drive for the owner" }]}
         onChange={(x) => update((a) => ({ ...a, vehicle: { ...a.vehicle, ownsVehicle: x === "yes" } }))}
       />
       {!application.vehicle.ownsVehicle ? (
-        <Txt variant="caption" color="muted">You'll upload a signed letter from the owner allowing you to drive it for Caliphate Rides.</Txt>
+        <View style={{ backgroundColor: colors.mist, borderRadius: 14, padding: 14, gap: 4 }}>
+          <Txt variant="bodyStrong">You'll need the owner's details</Txt>
+          <Txt variant="caption" color="muted">
+            The owner's name, phone number, email and address, a letter signed by the owner allowing you to drive the vehicle for Caliphate Rides, and a photo of the owner's government ID. This protects you and the owner if the vehicle is ever stolen or misused.
+          </Txt>
+        </View>
       ) : null}
 
       <View style={{ gap: 4, paddingTop: 6 }}>

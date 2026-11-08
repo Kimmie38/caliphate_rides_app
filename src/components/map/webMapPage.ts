@@ -92,15 +92,16 @@ function start(){
 // Our Sokoto places and the route line, the same layers the native map uses.
 function addAppLayers(){
   if (C.places && !map.getSource("sokoto-places")) {
+    var before = map.getLayer("route-edge") ? "route-edge" : undefined; // places stay under the route line
     map.addSource("sokoto-places", { type: "geojson", data: C.places });
     map.addLayer({ id: "sokoto-places-dot", type: "circle", source: "sokoto-places", minzoom: 11, paint: {
       "circle-color": ["get", "color"], "circle-radius": ["interpolate", ["linear"], ["zoom"], 11, 3, 15, 6, 18, 8],
-      "circle-stroke-color": C.colors.paper, "circle-stroke-width": 2 } });
+      "circle-stroke-color": C.colors.paper, "circle-stroke-width": 2 } }, before);
     map.addLayer({ id: "sokoto-places-label", type: "symbol", source: "sokoto-places", minzoom: 13, layout: {
       "text-field": ["get", "name"], "text-font": ["Noto Sans Bold"], "text-size": ["interpolate", ["linear"], ["zoom"], 13, 11, 17, 13],
       "text-max-width": 9, "text-variable-anchor": ["left", "right", "top", "bottom"], "text-radial-offset": 0.9,
       "text-justify": "auto", "text-optional": true, "symbol-sort-key": ["-", 1, ["get", "popular"]] },
-      paint: { "text-color": ["get", "color"], "text-halo-color": C.colors.paper, "text-halo-width": 1.6 } });
+      paint: { "text-color": ["get", "color"], "text-halo-color": C.colors.paper, "text-halo-width": 1.6 } }, before);
   }
   if (!map.getSource("route")) {
     map.addSource("route", { type: "geojson", data: emptyLine() });
@@ -131,10 +132,11 @@ function markerEl(o){
   if (o.kind === "user") return el('<div style="width:54px;height:54px;display:flex;align-items:center;justify-content:center;position:relative">' +
     '<div style="position:absolute;inset:0;border-radius:27px;background:' + k.green + ';opacity:.16"></div>' +
     '<div style="width:14px;height:14px;border-radius:11px;background:' + k.green + ';border:4px solid ' + k.paper + '"></div></div>');
-  if (o.kind === "pickup") return el('<div class="pin"><div style="width:32px;height:32px;border-radius:18px;background:' + k.green + ';border:2px solid ' + k.paper + ';display:flex;align-items:center;justify-content:center">' +
+  var tag = o.label ? '<div style="background:' + k.ink + ';color:' + k.paper + ';font:700 12px/1.2 -apple-system,Roboto,sans-serif;padding:4px 9px;border-radius:10px;margin-bottom:5px;white-space:nowrap">' + esc(o.label) + '</div>' : '';
+  if (o.kind === "pickup") return el('<div class="pin">' + tag + '<div style="width:32px;height:32px;border-radius:18px;background:' + k.green + ';border:2px solid ' + k.paper + ';display:flex;align-items:center;justify-content:center">' +
     '<svg width="24" height="24" viewBox="0 0 100 100"><path d="' + C.knot + '" fill="none" stroke="' + k.greenInk + '" stroke-width="10" stroke-linejoin="round"/></svg></div>' +
     '<div class="stem" style="background:' + k.green + '"></div></div>');
-  if (o.kind === "drop") return el('<div class="pin"><div style="width:34px;height:34px;border-radius:10px;background:' + k.ink + ';display:flex;align-items:center;justify-content:center">' +
+  if (o.kind === "drop") return el('<div class="pin">' + tag + '<div style="width:34px;height:34px;border-radius:10px;background:' + k.ink + ';display:flex;align-items:center;justify-content:center">' +
     '<div style="width:10px;height:10px;border-radius:2px;background:' + k.paper + '"></div></div>' +
     '<div class="stem" style="background:' + k.ink + '"></div></div>');
   // driver
@@ -144,6 +146,7 @@ function markerEl(o){
     '<div style="width:36px;height:36px;border-radius:20px;background:' + k.paper + ';border:2px solid ' + k.green + ';display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.25)">' +
     svgIcon(o.rideType === "keke" ? "keke" : "car", k.greenText) + '</div></div>');
 }
+function esc(t){ return String(t).replace(/[&<>"]/g, function(c){ return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
 function anchorFor(kind){ return kind === "pickup" || kind === "drop" ? "bottom" : "center"; }
 
 function glide(m, to){
@@ -164,10 +167,11 @@ function drawMarkers(){
     keep[o.id] = true;
     var at = [o.at.longitude, o.at.latitude];
     var m = markers[o.id];
-    if (m && m._kind !== o.kind + (o.rideType || "")) { m.remove(); m = null; }
+    var look = o.kind + (o.rideType || "") + (o.label || "");
+    if (m && m._kind !== look) { m.remove(); m = null; }
     if (!m) {
       m = new maplibregl.Marker({ element: markerEl(o), anchor: anchorFor(o.kind) }).setLngLat(at).addTo(map);
-      m._kind = o.kind + (o.rideType || "");
+      m._kind = look;
       markers[o.id] = m;
     } else if (o.kind === "driver") {
       glide(m, at);
@@ -189,6 +193,14 @@ window.cr = {
     points.forEach(function(p){ w = Math.min(w, p[0]); e = Math.max(e, p[0]); s = Math.min(s, p[1]); n = Math.max(n, p[1]); });
     if (e - w < 0.0005 && n - s < 0.0005) map.easeTo({ center: [(w + e) / 2, (s + n) / 2], zoom: 15.5, padding: padding, duration: duration });
     else map.fitBounds([[w, s], [e, n]], { padding: padding, duration: duration, maxZoom: 17 });
+  },
+  // New places from the server (the admin added some): swap the data in place.
+  setPlaces: function(places){
+    C.places = places;
+    if (!map) return;
+    var src = map.getSource("sokoto-places");
+    if (src) src.setData(places);
+    else if (places && map.isStyleLoaded()) addAppLayers();
   },
   setTheme: function(style, colors, places){
     C.colors = colors; C.places = places; credit();

@@ -1,5 +1,5 @@
 import { ENV } from "../config/env";
-import { computeFare, rateFor, billableKm, type PricingConfig, type RideTypeId } from "../lib/pricing";
+import { computeFare, faresFor, billableKm, type PricingConfig, type RideTypeId } from "../lib/pricing";
 import type { PaymentMethod, Place, Quote, Ride, TripSummary, WalletTransaction } from "../types";
 import { api, ApiError, wait } from "./http";
 import { mockRidePayments, mockState } from "./mockData";
@@ -8,17 +8,18 @@ import { getRoute } from "./routing";
 // Backend contract
 // POST /rides/quote        { pickup, destination }                          -> { quotes: Quote[] }
 // POST /rides              { pickup, destination, rideType, paymentMethod } -> { ride }
+// GET  /rides/current                                                       -> { ride | null }   (after a restart)
 // POST /rides/:id/cancel   { reason? }                                      -> { ride }
 // POST /rides/:id/rate     { stars, comment? }                              -> { ok }
 // GET  /rides/history                                                       -> { trips: TripSummary[] }
 // GET  /wallet                                                              -> { balance, transactions }
-// POST /wallet/topup       { amount }                                       -> { authorizationUrl }  (Paystack)
+// POST /wallet/topup       { amount }                                       -> { checkoutUrl }  (payment page)
 // PATCH /rides/:id/payment { paymentMethod }                                -> { ride }   (change how to pay)
-// POST /rides/:id/pay                                                       -> { authorizationUrl }  (card, Paystack)
+// POST /rides/:id/pay                                                       -> { checkoutUrl }  (card: payment page)
 
 const toPoint = (p: Place) => ({ name: p.name, latitude: p.location.latitude, longitude: p.location.longitude });
 
-/** One quote per enabled ride type. Fare = billable km × price per km. */
+/** One quote per enabled ride type. Fare = base fare + billable km × price per km (at least the minimum). */
 export async function getQuotes(pickup: Place, destination: Place, pricing: PricingConfig): Promise<Quote[]> {
   if (!ENV.useMock) {
     const r = await api<{ quotes: Quote[] }>("/rides/quote", { method: "POST", body: { pickup: toPoint(pickup), destination: toPoint(destination) } });
@@ -29,14 +30,16 @@ export async function getQuotes(pickup: Place, destination: Place, pricing: Pric
   return pricing.rideTypes
     .filter((t) => t.enabled)
     .map((t) => {
-      const ratePerKm = rateFor(pricing, t.id);
+      const fares = faresFor(pricing, t.id);
       const speedFactor = t.id === "keke" ? 1.15 : 1; // keke are a little slower
       return {
         rideType: t.id,
         distanceKm: km,
         durationMin: Math.max(2, Math.round(route.durationMin * speedFactor)),
-        ratePerKm,
-        fare: computeFare(km, ratePerKm),
+        baseFare: fares.baseFare,
+        ratePerKm: fares.perKm,
+        minimumFare: fares.minimumFare,
+        fare: computeFare(km, fares, pricing.roundTo),
         route: route.path,
       };
     });
@@ -65,11 +68,19 @@ export async function requestRide(input: {
     paymentMethod: input.paymentMethod,
     paymentStatus: "pending",
     distanceKm: input.quote.distanceKm,
+    baseFare: input.quote.baseFare,
     ratePerKm: input.quote.ratePerKm,
+    minimumFare: input.quote.minimumFare,
     fare: input.quote.fare,
     route: input.quote.route,
     createdAt: new Date().toISOString(),
   };
+}
+
+/** The ride in progress (or finished but unpaid), so the app can pick up where it left off. */
+export async function getCurrentRide(): Promise<Ride | null> {
+  if (ENV.useMock) return null;
+  return (await api<{ ride: Ride | null }>("/rides/current")).ride;
 }
 
 export async function cancelRide(rideId: string, reason?: string): Promise<void> {
@@ -112,7 +123,7 @@ export async function getWallet(): Promise<{ balance: number; transactions: Wall
   return api("/wallet");
 }
 
-/** Starts a Paystack top-up. Returns the checkout URL to open, or null in sample mode (balance is credited directly). */
+/** Starts an online top-up. Returns the checkout URL to open, or null in sample mode (balance is credited directly). */
 export async function startTopUp(amount: number): Promise<string | null> {
   if (ENV.useMock) {
     await wait(600);
@@ -120,7 +131,7 @@ export async function startTopUp(amount: number): Promise<string | null> {
     mockState.wallet.transactions.unshift({ id: `tx_${Date.now()}`, kind: "topup", label: "Top up", amount, at: new Date().toISOString(), method: "Sample payment" });
     return null;
   }
-  return (await api<{ authorizationUrl: string }>("/wallet/topup", { method: "POST", body: { amount } })).authorizationUrl;
+  return (await api<{ checkoutUrl: string }>("/wallet/topup", { method: "POST", body: { amount } })).checkoutUrl;
 }
 
 /** Switch how a ride is paid (before or after the trip). Wallet payments are taken straight away. */
@@ -140,8 +151,8 @@ export async function changePayment(ride: Ride, paymentMethod: PaymentMethod): P
   return { paymentMethod, paymentStatus: "pending" };
 }
 
-/** Card payment through Paystack. Returns the checkout URL to open, or null in sample mode (treated as paid). */
+/** Card payment online. Returns the checkout URL to open, or null in sample mode (treated as paid). */
 export async function payByCard(ride: Ride): Promise<string | null> {
   if (ENV.useMock) { await wait(900); return null; }
-  return (await api<{ authorizationUrl: string }>(`/rides/${ride.id}/pay`, { method: "POST" })).authorizationUrl;
+  return (await api<{ checkoutUrl: string }>(`/rides/${ride.id}/pay`, { method: "POST" })).checkoutUrl;
 }

@@ -3,6 +3,8 @@ import { View } from "react-native";
 import type { LatLng } from "../../lib/geo";
 import type { RideTypeId } from "../../lib/pricing";
 import { useTheme } from "../../theme/ThemeProvider";
+import { fonts } from "../../theme/tokens";
+import { Txt } from "../ui";
 import { CarIcon, KekeIcon } from "../Icon";
 import { KnotMark } from "../Knot";
 import { MLRN } from "./engine";
@@ -27,13 +29,25 @@ export function UserDot({ coordinate }: { coordinate: LatLng }) {
   );
 }
 
-export function PickupPin({ coordinate }: { coordinate: LatLng }) {
+/** Small dark bubble above a pin, e.g. "4 min" (like Bolt's ETA bubble). */
+function PinLabel({ text }: { text?: string }) {
   const { colors } = useTheme();
-  if (useWebOverlay("pickup", { kind: "pickup", at: coordinate })) return null;
+  if (!text) return null;
+  return (
+    <View style={{ backgroundColor: colors.ink, borderRadius: 10, paddingHorizontal: 9, paddingVertical: 4, marginBottom: 5 }}>
+      <Txt style={{ color: colors.paper, fontFamily: fonts.display, fontSize: 12 }}>{text}</Txt>
+    </View>
+  );
+}
+
+export function PickupPin({ coordinate, label }: { coordinate: LatLng; label?: string }) {
+  const { colors } = useTheme();
+  if (useWebOverlay("pickup", { kind: "pickup", at: coordinate, label })) return null;
   const { Marker } = MLRN!;
   return (
     <Marker id="pickup" lngLat={at(coordinate)} anchor="bottom">
-      <View accessibilityLabel="Pickup" style={{ alignItems: "center" }}>
+      <View accessibilityLabel={label ? `Pickup, ${label}` : "Pickup"} style={{ alignItems: "center" }}>
+        <PinLabel text={label} />
         <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: colors.green, alignItems: "center", justifyContent: "center", borderWidth: 2, borderColor: colors.paper }}>
           <KnotMark size={24} color={colors.greenInk} strokeWidth={10} />
         </View>
@@ -43,13 +57,14 @@ export function PickupPin({ coordinate }: { coordinate: LatLng }) {
   );
 }
 
-export function DropPin({ coordinate }: { coordinate: LatLng }) {
+export function DropPin({ coordinate, label }: { coordinate: LatLng; label?: string }) {
   const { colors } = useTheme();
-  if (useWebOverlay("destination", { kind: "drop", at: coordinate })) return null;
+  if (useWebOverlay("destination", { kind: "drop", at: coordinate, label })) return null;
   const { Marker } = MLRN!;
   return (
     <Marker id="destination" lngLat={at(coordinate)} anchor="bottom">
-      <View accessibilityLabel="Destination" style={{ alignItems: "center" }}>
+      <View accessibilityLabel={label ? `Destination, ${label}` : "Destination"} style={{ alignItems: "center" }}>
+        <PinLabel text={label} />
         <View style={{ width: 34, height: 34, borderRadius: 10, backgroundColor: colors.ink, alignItems: "center", justifyContent: "center" }}>
           <View style={{ width: 10, height: 10, borderRadius: 2, backgroundColor: colors.paper }} />
         </View>

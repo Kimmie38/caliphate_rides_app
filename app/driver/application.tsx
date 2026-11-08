@@ -79,6 +79,8 @@ export default function ApplicationScreen() {
         <Row k="LGA" v={a.personal.lga} />
         <Row k="Vehicle" v={`${a.vehicleType === "keke" ? "Keke" : "Car"} · ${[a.vehicle.colour, a.vehicle.make, a.vehicle.model].filter(Boolean).join(" ")}`} />
         <Row k="Plate" v={a.vehicle.plate} />
+        <Row k="Owner" v={a.vehicle.ownsVehicle ? "The driver" : `${a.owner?.fullName || "Not given"} (drives for the owner)`} />
+        {!a.vehicle.ownsVehicle ? <Row k="Owner's contact" v={[a.owner?.phone, a.owner?.email].filter(Boolean).join(" · ")} /> : null}
         <Row k="Guarantor" v={`${a.guarantor.fullName} (${a.guarantor.relationship.toLowerCase()})`} />
         <Row k="Payouts" v={`${a.bank.bankName} · ${a.bank.accountNumber}`} />
         <Row k="Submitted" v={a.submittedAt ? prettyDateTime(a.submittedAt) : "Not yet"} />
@@ -98,7 +100,7 @@ export default function ApplicationScreen() {
               <View style={{ flex: 1, gap: 2 }}>
                 <Txt variant="bodyStrong">{d.title}</Txt>
                 <Txt variant="caption" color="muted">
-                  {v.expiry ? `Expires ${prettyDate(v.expiry)} · ` : ""}{versions} version{versions > 1 ? "s" : ""} on record
+                  {v.variant ? `${v.variant} · ` : ""}{v.expiry ? `Expires ${prettyDate(v.expiry)} · ` : ""}{versions} version{versions > 1 ? "s" : ""} on record
                 </Txt>
               </View>
               <Pill text={v.status === "approved" ? "Approved" : v.status === "pending" ? "Being checked" : "Not accepted"} tone={v.status === "approved" ? "green" : v.status === "pending" ? "amber" : "red"} />

@@ -10,16 +10,10 @@ const CAMERA_WHY = "Caliphate Rides uses the camera when you sign up to drive, t
 const PHOTOS_WHY = "Caliphate Rides lets drivers choose photos of their licence and vehicle papers.";
 
 const config: ExpoConfig = {
-  owner: "caliphate-rides",
   name: "Caliphate Rides",
-  slug: "caliphate-rides-vbtpdtokyvfx68ngrk-p",
+  slug: "caliphate-rides",
   scheme: "caliphaterides",
   version: "0.1.0",
-  extra: {
-    eas: {
-      projectId: "4beed4dd-1be5-42ce-87f7-4a809fdc5eef",
-    },
-  },
   orientation: "portrait",
   icon: "./assets/icon.png",
   userInterfaceStyle: "automatic",
@@ -30,11 +24,13 @@ const config: ExpoConfig = {
       NSLocationWhenInUseUsageDescription: LOCATION_WHY,
       NSCameraUsageDescription: CAMERA_WHY,
       NSPhotoLibraryUsageDescription: PHOTOS_WHY,
+      // Only standard HTTPS: answers Apple's export-compliance question so TestFlight builds aren't held up.
+      ITSAppUsesNonExemptEncryption: false,
     },
   },
   android: {
     package: "ng.caliphaterides.app",
-    adaptiveIcon: { foregroundImage: "./assets/logo.png", backgroundColor: GREEN },
+    adaptiveIcon: { foregroundImage: "./assets/adaptive-icon.png", backgroundColor: GREEN },
     permissions: ["ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION", "CAMERA"],
   },
   web: { favicon: "./assets/favicon.png" },

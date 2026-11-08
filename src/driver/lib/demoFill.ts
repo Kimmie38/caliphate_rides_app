@@ -45,6 +45,15 @@ export function fillGuarantor(g: DriverApplication["guarantor"]): DriverApplicat
   };
 }
 
+export function fillOwner(o: DriverApplication["owner"] | undefined): DriverApplication["owner"] {
+  return {
+    fullName: or(o?.fullName ?? "", "Alhaji Sani Bello"),
+    phone: or(o?.phone ?? "", "803 555 0199"),
+    email: or(o?.email ?? "", "sani.bello@example.com"),
+    address: or(o?.address ?? "", "No. 7 Emir Yahaya Road, Sokoto"),
+  };
+}
+
 export function fillBank(b: DriverApplication["bank"], name: string): DriverApplication["bank"] {
   return {
     bankName: or(b.bankName, "Jaiz Bank"),
@@ -61,6 +70,7 @@ export function fillDocuments(a: DriverApplication): DriverApplication["document
     if (!req.required(type, a.vehicle.ownsVehicle) || docs[req.kind]?.current) continue;
     const version: DocumentVersion = {
       files: req.photos.map(samplePhoto),
+      variant: req.variants?.[0],
       number: req.needsNumber ? "SKT-2026-04817" : undefined,
       expiry: req.needsExpiry ? yearsFromNow(2) : undefined,
       uploadedAt: new Date().toISOString(),
@@ -79,6 +89,7 @@ export function fillAll(a: DriverApplication, name?: string): DriverApplication 
   return {
     ...withType,
     guarantor: fillGuarantor(a.guarantor),
+    owner: a.vehicle.ownsVehicle ? a.owner : fillOwner(a.owner),
     bank: fillBank(a.bank, personal.fullName),
     documents: fillDocuments(withType),
   };

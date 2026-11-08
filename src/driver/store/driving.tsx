@@ -3,6 +3,7 @@ import React, { createContext, useCallback, useContext, useEffect, useRef, useSt
 import { ENV } from "../../config/env";
 import { inServiceArea, relocateTo, serviceCenter } from "../../lib/area";
 import type { LatLng } from "../../lib/geo";
+import { formatNaira } from "../../lib/pricing";
 import * as trips from "../services/trips";
 import type { DriverPosition, RideRequest, Trip, TripStage, VehicleType } from "../types";
 
@@ -75,7 +76,10 @@ export function DrivingProvider({ children }: { children: React.ReactNode }) {
       setPosition(next);
       trips.sendPosition(next);
     }).then((s) => { sub = s; }).catch(() => {});
-    return () => sub?.remove();
+    // GPS only reports movement, so a driver parked at a rank would go quiet. Check in regularly so the
+    // server keeps offering them rides (it treats drivers it hasn't heard from in 90 s as gone).
+    const heartbeat = setInterval(() => trips.sendPosition({ location: posRef.current, heading: 0, at: Date.now() }), 15_000);
+    return () => { sub?.remove(); clearInterval(heartbeat); };
   }, [online, locationStatus]);
 
   const handlers: trips.DriverHandlers = {
@@ -85,6 +89,20 @@ export function DrivingProvider({ children }: { children: React.ReactNode }) {
       if (tripRef.current?.id === id) { setTrip(null); setNotice("The rider cancelled this trip."); }
     },
     onPaid: (id) => setTrip((t) => (t && t.id === id ? { ...t, paymentStatus: "paid" } : t)),
+    onPaymentChanged: (p) => {
+      setTrip((t) => (t && t.id === p.rideId ? { ...t, paymentMethod: p.paymentMethod, paymentStatus: p.paymentStatus } : t));
+      setRequest((r) => (r && r.id === p.rideId ? { ...r, paymentMethod: p.paymentMethod } : r));
+    },
+    onBalance: (b) => {
+      if (b.blocked) setNotice(`You owe ${formatNaira(-b.balance)} in commission, more than the ${formatNaira(b.owedLimit)} limit. Pay it from Earnings to keep getting trips.`);
+    },
+    onError: (message) => {
+      disconnect.current?.();
+      disconnect.current = null;
+      setOnline(false);
+      setRequest(null);
+      setNotice(message);
+    },
   };
   const handlersRef = useRef(handlers);
   handlersRef.current = handlers;
@@ -92,7 +110,14 @@ export function DrivingProvider({ children }: { children: React.ReactNode }) {
   const goOnline = useCallback((vehicleType: VehicleType) => {
     disconnect.current?.();
     disconnect.current = trips.connectDriver(
-      { onRequest: (r) => handlersRef.current.onRequest(r), onCancelled: (id) => handlersRef.current.onCancelled(id), onPaid: (id) => handlersRef.current.onPaid(id) },
+      {
+        onRequest: (r) => handlersRef.current.onRequest(r),
+        onCancelled: (id) => handlersRef.current.onCancelled(id),
+        onPaid: (id) => handlersRef.current.onPaid(id),
+        onError: (message) => handlersRef.current.onError?.(message),
+        onBalance: (b) => handlersRef.current.onBalance?.(b),
+        onPaymentChanged: (p) => handlersRef.current.onPaymentChanged?.(p),
+      },
       () => posRef.current,
       vehicleType,
       () => !busy.current.request && !busy.current.trip,
@@ -108,6 +133,11 @@ export function DrivingProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => () => disconnect.current?.(), []);
+
+  // After a restart, pick up a trip that's still in progress.
+  useEffect(() => {
+    trips.getCurrentTrip().then((t) => { if (t && t.stage !== "done") setTrip((cur) => cur ?? t); }).catch(() => {});
+  }, []);
 
   // A request disappears if the driver doesn't answer in time.
   useEffect(() => {
@@ -132,11 +162,13 @@ export function DrivingProvider({ children }: { children: React.ReactNode }) {
     trip,
     advance: async (to) => {
       if (!trip) return;
-      await trips.moveTrip(trip.id, to);
+      const server = await trips.moveTrip(trip.id, to);
       if (to === "payment") {
-        // Wallet is charged automatically; card waits for Paystack; cash and transfer wait for the driver.
-        const paid = trip.paymentMethod === "wallet";
-        setTrip({ ...trip, stage: "payment", paymentStatus: paid ? "paid" : "pending" });
+        // Wallet is charged automatically; card waits for the payment provider; cash and transfer wait for the driver.
+        // With the backend, use what it says (e.g. a wallet that was too low stays unpaid).
+        const paymentMethod = server?.paymentMethod ?? trip.paymentMethod;
+        const paid = server ? server.paymentStatus === "paid" : trip.paymentMethod === "wallet";
+        setTrip({ ...trip, paymentMethod, stage: "payment", paymentStatus: paid ? "paid" : "pending" });
         if (trip.paymentMethod === "card") trips.mockCardPayment(trip.id, { onPaid: (id) => handlersRef.current.onPaid(id) });
         return;
       }

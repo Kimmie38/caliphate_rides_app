@@ -108,7 +108,7 @@ export default function Home() {
         <View style={{ flexDirection: "row", gap: 12 }}>
           {(["keke", "car"] as const).map((t, i) => {
             const cfg = pricing.rideTypes.find((r) => r.id === t);
-            const rate = cfg?.ratePerKm ?? pricing.ratePerKm;
+            const rate = cfg?.perKm ?? 500;
             return (
               <Animated.View key={t} entering={FadeInDown.duration(400).delay(80 + i * 70)} style={{ flex: 1 }}>
                 <Pressable accessibilityRole="button" accessibilityLabel={`${t === "keke" ? "Keke" : "Car"}, ${formatNaira(rate)} per km`} onPress={() => pickType(t)}

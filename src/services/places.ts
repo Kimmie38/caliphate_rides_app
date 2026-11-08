@@ -1,16 +1,40 @@
 import * as Location from "expo-location";
 import { ENV } from "../config/env";
-import { landmarks } from "../data/landmarks";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { landmarks, setPlaces, type Landmark } from "../data/landmarks";
 import { inServiceArea, serviceBounds, serviceCenter } from "../lib/area";
 import { haversineKm, type LatLng } from "../lib/geo";
 import type { Place } from "../types";
+import { api } from "./http";
+
+const PLACES_KEY = "cr.places.v1";
+
+/**
+ * Loads every place on our map from the backend, including ones the admin added. Uses the last saved
+ * copy straight away (so search works offline), then refreshes it. Sample mode keeps the built-in list.
+ */
+export async function loadServerPlaces(): Promise<void> {
+  if (ENV.useMock) return;
+  try {
+    const saved = await AsyncStorage.getItem(PLACES_KEY);
+    if (saved) setPlaces(JSON.parse(saved));
+  } catch { /* no saved copy */ }
+  try {
+    const r = await api<{ places: Landmark[] }>("/places");
+    const list = (r.places ?? []).filter((p) => p?.location && Number.isFinite(p.location.latitude) && Number.isFinite(p.location.longitude));
+    setPlaces(list);
+    AsyncStorage.setItem(PLACES_KEY, JSON.stringify(list)).catch(() => {});
+  } catch { /* keep what we have */ }
+}
 
 const norm = (s: string) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ']/g, "");
 
 /** Our own popular places first, then OpenStreetMap search (Photon), then Google if a key is set. */
 export async function searchPlaces(query: string, near: LatLng, signal?: AbortSignal): Promise<Place[]> {
   const q = norm(query.trim());
-  const local = landmarks().filter((l) => !q || norm(`${l.name} ${l.subtitle ?? ""}`).includes(q))
+  const local = landmarks()
+    .filter((l) => !ENV.serviceAnywhere || haversineKm(near, l.location) < 60) // testing elsewhere: skip far-away Sokoto places
+    .filter((l) => !q || norm(`${l.name} ${l.subtitle ?? ""}`).includes(q))
     .map((l) => ({ place: l as Place, km: haversineKm(near, l.location), popular: l.popular }))
     .sort((a, b) => (q ? a.km - b.km : Number(b.popular) - Number(a.popular) || a.km - b.km))
     .map((r) => r.place);
@@ -48,8 +72,9 @@ function osmCategory(key: string, value: string): Place["category"] {
 /** OpenStreetMap place search (Photon), limited to the service area. */
 async function searchOsm(query: string, near: LatLng, signal?: AbortSignal): Promise<Place[]> {
   const [w, s, e, n] = serviceBounds();
+  const box = ENV.serviceAnywhere ? "" : `&bbox=${w},${s},${e},${n}`; // testing elsewhere: search around you
   const url = `${ENV.searchUrl}/api/?q=${encodeURIComponent(query)}&lat=${near.latitude}&lon=${near.longitude}` +
-    `&bbox=${w},${s},${e},${n}&limit=10&lang=en`;
+    `${box}&limit=10&lang=en`;
   const json = await (await fetch(url, { signal })).json();
   return (json?.features ?? [])
     .filter((f: any) => f?.geometry?.type === "Point" && f.properties?.name)

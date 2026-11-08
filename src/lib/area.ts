@@ -1,3 +1,4 @@
+import { ENV } from "../config/env";
 import { SOKOTO_AREA, SOKOTO_CENTER, type LatLng } from "./geo";
 
 // The service area (Sokoto), with an optional "try it where you are" shift for sample mode.
@@ -35,6 +36,7 @@ export function serviceBounds(): [number, number, number, number] {
 }
 
 export function inServiceArea(p: LatLng): boolean {
+  if (ENV.serviceAnywhere) return true; // testing in another city with the backend
   const q = unshift(p);
   return (
     q.latitude >= SOKOTO_AREA.minLat && q.latitude <= SOKOTO_AREA.maxLat &&

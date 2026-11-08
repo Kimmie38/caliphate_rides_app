@@ -3,7 +3,7 @@ import { goBack } from "../../../src/lib/nav";
 import React, { useState } from "react";
 import { Image, KeyboardAvoidingView, Platform, ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { DateField, Field, Pill, PhotoField } from "../../../src/driver/components/form";
+import { ChoiceRow, DateField, Field, Pill, PhotoField, SelectField } from "../../../src/driver/components/form";
 import { Button, IconButton, Txt } from "../../../src/components/ui";
 import { documentRequirement } from "../../../src/driver/config/requirements";
 import { parseDmy, prettyDate, prettyDateTime, toDmy } from "../../../src/driver/lib/dates";
@@ -27,6 +27,7 @@ export default function DocumentScreen() {
   const start = isUpdate ? undefined : doc?.current;
   const [files, setFiles] = useState<(string | undefined)[]>(start?.files ?? []);
   const [number, setNumber] = useState(start?.number ?? (isUpdate ? doc?.current?.number ?? "" : ""));
+  const [variant, setVariant] = useState(start?.variant ?? (isUpdate ? doc?.current?.variant ?? "" : ""));
   const [expiry, setExpiry] = useState(toDmy(start?.expiry));
   const [errors, setErrors] = useState<Errors>({});
   const [busy, setBusy] = useState(false);
@@ -45,12 +46,17 @@ export default function DocumentScreen() {
       goBack(home);
       return;
     }
-    const e = validateDocument({ files, photoCount: req.photos.length, number, needsNumber: req.needsNumber, expiryText: expiry, needsExpiry: req.needsExpiry });
+    const e = validateDocument({ files, photoCount: req.photos.length, number, needsNumber: req.needsNumber, expiryText: expiry, needsExpiry: req.needsExpiry, variants: req.variants, variant });
     setErrors(e);
     if (Object.keys(e).length) return;
     setBusy(true);
     try {
-      await uploadDocument(kind, { files: files as string[], number: req.needsNumber ? number.trim() : undefined, expiry: req.needsExpiry ? parseDmy(expiry)! : undefined });
+      await uploadDocument(kind, {
+        files: files as string[],
+        variant: req.variants ? variant : undefined,
+        number: req.needsNumber ? number.trim() : undefined,
+        expiry: req.needsExpiry ? parseDmy(expiry)! : undefined,
+      });
       goBack(home);
     } catch (err: any) {
       setErrors({ save: err?.message ?? "Couldn't upload. Check your connection and try again." });
@@ -82,6 +88,15 @@ export default function DocumentScreen() {
           </View>
         ) : null}
 
+        {req.variants ? (
+          req.variants.length <= 2 ? (
+            <ChoiceRow label={req.variantLabel ?? "Which one is it?"} value={variant} options={req.variants.map((x) => ({ value: x, label: x }))}
+              onChange={(x) => { setVariant(x); setErrors({}); }} error={errors.variant} />
+          ) : (
+            <SelectField label={req.variantLabel ?? "Which one is it?"} value={variant} options={req.variants} onChange={(x) => { setVariant(x); setErrors({}); }} error={errors.variant} />
+          )
+        ) : null}
+
         {req.photos.map((label, i) => (
           <PhotoField key={label} label={label} uri={files[i]} selfie={kind === "selfie"} onChange={(uri) => { const next = [...files]; next[i] = uri; setFiles(next); setErrors({}); }} />
         ))}
@@ -101,7 +116,7 @@ export default function DocumentScreen() {
               <View key={v.uploadedAt} style={{ flexDirection: "row", gap: 12, alignItems: "center", paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: colors.line }}>
                 {v.files[0] ? <Image source={{ uri: v.files[0] }} style={{ width: 52, height: 36, borderRadius: 6, backgroundColor: colors.mist }} /> : null}
                 <View style={{ flex: 1, gap: 2 }}>
-                  <Txt variant="caption">{i === 0 ? "Current" : "Earlier"} · uploaded {prettyDateTime(v.uploadedAt)}</Txt>
+                  <Txt variant="caption">{i === 0 ? "Current" : "Earlier"}{v.variant ? ` · ${v.variant}` : ""} · uploaded {prettyDateTime(v.uploadedAt)}</Txt>
                   {v.expiry ? <Txt variant="caption" color="muted">Expires {prettyDate(v.expiry)}{v.number ? ` · ${v.number}` : ""}</Txt> : null}
                 </View>
                 <Pill text={v.status === "approved" ? "Approved" : v.status === "pending" ? "Being checked" : v.status === "rejected" ? "Not accepted" : "Missing"}

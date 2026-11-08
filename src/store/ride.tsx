@@ -2,9 +2,11 @@ import React, { createContext, useCallback, useContext, useEffect, useRef, useSt
 import { Linking } from "react-native";
 import { DEFAULT_PRICING, type PricingConfig, type RideTypeId } from "../lib/pricing";
 import { getPricing } from "../services/config";
+import { loadServerPlaces } from "../services/places";
 import * as rides from "../services/rides";
 import { subscribeToRide } from "../services/tracking";
 import type { DriverPosition, PaymentMethod, Place, Quote, Ride } from "../types";
+import { useSession } from "./session";
 
 type QuotesStatus = "idle" | "loading" | "ready" | "error";
 
@@ -35,7 +37,7 @@ type RideValue = {
   cancelActiveRide: (reason?: string) => Promise<void>;
   /** Change how the current ride is paid (in app or directly to the driver). */
   changeActivePayment: (m: PaymentMethod) => Promise<void>;
-  /** Pay the current ride by card through Paystack. */
+  /** Pay the current ride by card online. */
   payActiveByCard: () => Promise<void>;
   /** Clears the finished ride and the destination, ready for the next booking. */
   finishRide: () => void;
@@ -67,7 +69,14 @@ export function RideProvider({ children }: { children: React.ReactNode }) {
     }
   }, [pricing]);
 
-  useEffect(() => { refreshPricing(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { refreshPricing(); loadServerPlaces(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // After the app was closed (or Android stopped it while the payment page was open), pick the ride back up.
+  const { status: sessionStatus } = useSession();
+  useEffect(() => {
+    if (sessionStatus !== "signedIn") { if (sessionStatus === "signedOut") setActiveRide(null); return; }
+    rides.getCurrentRide().then((r) => { if (r) setActiveRide((cur) => cur ?? r); }).catch(() => {});
+  }, [sessionStatus]);
 
   // Always quote with the latest admin price, so a change in the dashboard shows up on the next booking.
   const loadQuotes = useCallback(async () => {
@@ -135,7 +144,7 @@ export function RideProvider({ children }: { children: React.ReactNode }) {
   const payActiveByCard = useCallback(async () => {
     if (!activeRide) return;
     const url = await rides.payByCard(activeRide);
-    if (url) await Linking.openURL(url); // the server marks the ride paid when Paystack confirms (ride:updated)
+    if (url) await Linking.openURL(url); // the server marks the ride paid when the payment provider confirms (ride:updated)
     else setActiveRide((r) => (r ? { ...r, paymentMethod: "card", paymentStatus: "paid" } : r));
   }, [activeRide]);
 

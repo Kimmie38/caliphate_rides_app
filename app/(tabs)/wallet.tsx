@@ -8,6 +8,7 @@ import { useTabBarHeight } from "../../src/components/TabBar";
 import { Chip, Txt } from "../../src/components/ui";
 import { Badge, Group, Hero } from "../../src/components/visual";
 import { formatNaira } from "../../src/lib/pricing";
+import { useOnAppActive } from "../../src/hooks/useOnAppActive";
 import { getWallet, startTopUp } from "../../src/services/rides";
 import { useSession } from "../../src/store/session";
 import { useTheme } from "../../src/theme/ThemeProvider";
@@ -30,12 +31,13 @@ export default function Wallet() {
     try { const w = await getWallet(); setBalance(w.balance); setTxs(w.transactions); } catch { /* keep last */ }
   }, []);
   useFocusEffect(useCallback(() => { load(); }, [load]));
+  useOnAppActive(load); // back from the payment page: the server re-checks the top-up and the balance updates
 
   const topUp = async () => {
     setBusy(true);
     try {
       const url = await startTopUp(amount);
-      if (url) await Linking.openURL(url); // Paystack checkout; the backend credits the wallet on the webhook
+      if (url) await Linking.openURL(url); // payment checkout; the backend credits the wallet when the payment provider confirms
       await load();
     } catch (e: any) {
       Alert.alert("Top up didn't start", e?.message ?? "Try again in a moment.");
@@ -70,7 +72,7 @@ export default function Wallet() {
       <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}>
         {AMOUNTS.map((a) => <Chip key={a} label={formatNaira(a)} active={a === amount} onPress={() => setAmount(a)} />)}
       </View>
-      <Txt variant="caption" color="muted">Pay by card, bank transfer or USSD through Paystack. Cash rides don't need a balance.</Txt>
+      <Txt variant="caption" color="muted">Pay by card, bank transfer or USSD on a secure payment page. Cash rides don't need a balance.</Txt>
 
       <Txt variant="heading" style={{ marginTop: 4 }}>Recent activity</Txt>
       {txs.length === 0 ? <Txt color="muted">Top-ups and wallet payments show up here.</Txt> : (

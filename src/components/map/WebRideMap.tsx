@@ -2,12 +2,13 @@ import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo
 import { StyleSheet, View } from "react-native";
 import { WebView, type WebViewMessageEvent } from "react-native-webview";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { ENV } from "../../config/env";
 import { serviceCenter } from "../../lib/area";
+import { mapSourcesFor } from "../../map/sources";
 import { buildMapStyle, mapGroundColor } from "../../map/style";
 import { tint, type TintName } from "../../theme/tints";
 import { useTheme } from "../../theme/ThemeProvider";
 import { placesGeoJSON } from "./mapPlaces";
+import { usePlacesVersion } from "../../data/landmarks";
 import { OverlayContext, type Overlay } from "./overlays";
 import type { RideMapHandle, RideMapProps } from "./types";
 import { webMapPage, type MarkerColors } from "./webMapPage";
@@ -32,15 +33,18 @@ export const WebRideMap = forwardRef<RideMapHandle, RideMapProps>(function WebRi
   const centerCb = useRef(onCenterChange);
   centerCb.current = onCenterChange;
 
+  // Our Sokoto map in and around Sokoto; the public map elsewhere (testing in another city).
+  const sources = mapSourcesFor(center ?? serviceCenter());
   const style = useMemo(() => {
     const tints = Object.fromEntries(TINTS.map((t) => [t, tint(t, isDark)]));
-    return buildMapStyle(colors, tints, isDark, { tilesUrl: ENV.mapTilesUrl, glyphsUrl: ENV.mapGlyphsUrl });
-  }, [colors, isDark]);
+    return buildMapStyle(colors, tints, isDark, sources);
+  }, [colors, isDark, sources]);
   const markerColors: MarkerColors = useMemo(() => ({
     green: colors.green, greenInk: colors.greenInk, greenText: colors.greenText, paper: colors.paper, ink: colors.ink,
     ground: mapGroundColor(colors, isDark),
   }), [colors, isDark]);
-  const places = useMemo(() => (showPlaces ? placesGeoJSON(isDark) : null), [showPlaces, isDark]);
+  const placesVersion = usePlacesVersion();
+  const places = useMemo(() => (showPlaces ? placesGeoJSON(isDark) : null), [showPlaces, isDark, placesVersion]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // The page is built once; later theme changes are sent to it.
   const start = useRef(center ?? serviceCenter());
@@ -75,6 +79,13 @@ export const WebRideMap = forwardRef<RideMapHandle, RideMapProps>(function WebRi
     if (firstTheme.current) { firstTheme.current = false; return; }
     run(`cr.setTheme(${JSON.stringify(style)}, ${JSON.stringify(markerColors)}, ${JSON.stringify(places)})`);
   }, [style]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Places loaded from the server after the map opened.
+  const firstPlaces = useRef(true);
+  useEffect(() => {
+    if (firstPlaces.current) { firstPlaces.current = false; return; }
+    if (places) run(`cr.setPlaces(${JSON.stringify(places)})`);
+  }, [placesVersion]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useImperativeHandle(ref, () => ({
     frame: (points, inset, animated = true) => {

@@ -12,7 +12,7 @@ type Value = {
   refresh: () => Promise<void>;
   /** Changes editable fields and saves the draft in the background. */
   update: (fn: (a: DriverApplication) => DriverApplication) => void;
-  uploadDocument: (kind: DocumentKind, input: { files: string[]; number?: string; expiry?: string }) => Promise<void>;
+  uploadDocument: (kind: DocumentKind, input: { files: string[]; number?: string; expiry?: string; variant?: string }) => Promise<void>;
   submit: (signedName: string) => Promise<void>;
   mockReview: (d: "approve" | "changes") => Promise<void>;
   resetMock: () => Promise<void>;
@@ -54,12 +54,26 @@ export function ApplicationProvider({ children }: { children: React.ReactNode })
     return () => clearInterval(t);
   }, [pendingReview, refresh]);
 
+  // Waiting for the review team: check every 30 s, so approval shows up without restarting the app.
+  const waiting = application?.status === "submitted";
+  useEffect(() => {
+    if (!waiting) return;
+    const t = setInterval(refresh, 30_000);
+    return () => clearInterval(t);
+  }, [waiting, refresh]);
+
   const update = useCallback((fn: (a: DriverApplication) => DriverApplication) => {
     setApplication((a) => {
       if (!a) return a;
       const next = fn(a);
       if (saveTimer.current) clearTimeout(saveTimer.current);
-      saveTimer.current = setTimeout(() => { svc.saveDraft(next).catch(() => {}); }, 600);
+      saveTimer.current = setTimeout(() => {
+        // The server issues the record number and keeps status, timeline and documents: take those back.
+        svc.saveDraft(next).then((saved) => {
+          if (!saved) return;
+          setApplication((cur) => cur && { ...cur, recordId: saved.recordId, status: saved.status, timeline: saved.timeline, documents: saved.documents, createdAt: saved.createdAt });
+        }).catch(() => {});
+      }, 600);
       return next;
     });
   }, []);

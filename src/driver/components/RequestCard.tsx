@@ -5,7 +5,7 @@ import { Button, Txt } from "../../components/ui";
 import { Ring, Tag } from "../../components/visual";
 import { haversineKm, type LatLng } from "../../lib/geo";
 import { isInApp, paymentOption } from "../../lib/payments";
-import { formatNaira } from "../../lib/pricing";
+import { fareBreakdown, formatNaira } from "../../lib/pricing";
 import { fonts } from "../../theme/tokens";
 import type { RideRequest } from "../types";
 
@@ -39,7 +39,10 @@ export function RequestCard({ request, from, onAccept, onDecline, accepting }: {
       <View style={{ flexDirection: "row", alignItems: "flex-end", gap: 12 }}>
         <View style={{ flex: 1 }}>
           <Txt style={{ fontFamily: fonts.displayHeavy, fontSize: 42, lineHeight: 46, letterSpacing: -1.4 }} tabular>{formatNaira(request.fare)}</Txt>
-          <Txt variant="caption" color="muted" tabular style={{ fontFamily: fonts.bodySemi }}>{request.distanceKm.toFixed(1)} km × {formatNaira(request.ratePerKm)} · about {request.durationMin} min</Txt>
+          <Txt variant="caption" color="muted" tabular style={{ fontFamily: fonts.bodySemi }}>{fareBreakdown(request)} · about {request.durationMin} min</Txt>
+          <Txt variant="caption" color="greenText" tabular style={{ fontFamily: fonts.bodyBold, marginTop: 2 }}>
+            You get {formatNaira(request.driverEarning)} after {request.commissionPercent}% commission
+          </Txt>
         </View>
         <Tag text={inApp ? `Paid in app · ${pay.label}` : pay.id === "cash" ? "Collect cash" : "Transfer to you"} tone={inApp ? "green" : "amber"} icon={pay.icon} />
       </View>

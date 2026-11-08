@@ -13,7 +13,7 @@ import { Missing } from "../../src/components/Missing";
 import { PaymentPicker } from "../../src/components/PaymentPicker";
 import { Button, tap, Txt } from "../../src/components/ui";
 import { isInApp, paymentOption, type PaymentMethod } from "../../src/lib/payments";
-import { formatNaira } from "../../src/lib/pricing";
+import { fareBreakdown, formatNaira } from "../../src/lib/pricing";
 import { getWallet, rateRide } from "../../src/services/rides";
 import { useRide } from "../../src/store/ride";
 import { useTheme } from "../../src/theme/ThemeProvider";
@@ -83,7 +83,7 @@ export default function Complete() {
         <Txt variant="label" color="muted" align="center" style={{ marginTop: 6 }}>You've arrived at {ride.destination.name}</Txt>
         <Txt variant="total" tabular>{formatNaira(ride.fare)}</Txt>
         <Txt variant="caption" color="muted" tabular>
-          {ride.distanceKm.toFixed(1)} km × {formatNaira(ride.ratePerKm)} per km · {ride.rideType === "keke" ? "Keke" : "Car"}
+          {fareBreakdown(ride)} · {ride.rideType === "keke" ? "Keke" : "Car"}
         </Txt>
       </View>
 
@@ -134,7 +134,7 @@ export default function Complete() {
             {method === "card" && (
               <>
                 <Txt variant="heading">Pay {formatNaira(ride.fare)} by card</Txt>
-                <Txt variant="caption" color="muted">Paystack opens to take the payment securely.</Txt>
+                <Txt variant="caption" color="muted">A secure payment page opens to take the payment.</Txt>
                 <Button title={`Pay ${formatNaira(ride.fare)}`} icon="card" onPress={payCard} loading={paying} />
               </>
             )}

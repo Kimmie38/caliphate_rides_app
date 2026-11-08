@@ -30,7 +30,9 @@ export type Quote = {
   rideType: RideTypeId;
   distanceKm: number;
   durationMin: number;
+  baseFare?: number;
   ratePerKm: number;
+  minimumFare?: number;
   fare: number;
   route: LatLng[];
 };
@@ -51,10 +53,12 @@ export type Ride = {
   destination: Place;
   rideType: RideTypeId;
   paymentMethod: PaymentMethod;
-  /** pending until Paystack (in app) or the driver (cash / transfer) confirms the money arrived */
+  /** pending until the payment provider (in app) or the driver (cash / transfer) confirms the money arrived */
   paymentStatus: "pending" | "paid";
   distanceKm: number;
+  baseFare?: number;
   ratePerKm: number;
+  minimumFare?: number;
   fare: number;
   route: LatLng[];
   driver?: Driver;

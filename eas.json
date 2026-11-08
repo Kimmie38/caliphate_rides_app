@@ -1,19 +1,47 @@
 {
-  "cli": { "appVersionSource": "remote" },
+  "cli": {
+    "appVersionSource": "remote"
+  },
   "build": {
+    "base": {
+      "env": {
+        "EXPO_PUBLIC_ROUTING_URL": "https://routing.caliphaterides.com.ng",
+        "EXPO_PUBLIC_USE_MOCK": "false",
+        "EXPO_PUBLIC_API_URL": "https://api.caliphaterides.com.ng",
+        "EXPO_PUBLIC_MAP_TILES_URL": "https://tiles.caliphaterides.com.ng/sokoto",
+        "EXPO_PUBLIC_MAP_GLYPHS_URL": "https://tiles.caliphaterides.com.ng/font/{fontstack}/{range}"
+      }
+    },
     "development": {
+      "extends": "base",
       "developmentClient": true,
       "distribution": "internal",
-      "android": { "buildType": "apk" }
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_SERVICE_AREA": "anywhere"
+      }
     },
     "preview": {
+      "extends": "base",
       "distribution": "internal",
-      "android": { "buildType": "apk" }
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_SERVICE_AREA": "anywhere"
+      }
     },
     "production": {
+      "extends": "base",
       "autoIncrement": true,
-      "android": { "buildType": "app-bundle" }
+      "android": {
+        "buildType": "app-bundle"
+      }
     }
   },
-  "submit": { "production": {} }
+  "submit": {
+    "production": {}
+  }
 }

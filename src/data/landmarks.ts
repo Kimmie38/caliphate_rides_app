@@ -1,9 +1,11 @@
+import { useSyncExternalStore } from "react";
 import { shift } from "../lib/area";
 import type { Place, PlaceCategory } from "../types";
 
-// Popular pickup and drop-off points in Sokoto city. Coordinates from Google Maps (Oct 2026).
-// In production these come from the backend (GET /places/popular) so admins can add and edit them;
-// this list is the built-in fallback and the seed data for that collection.
+// Places on our map: popular pickup and drop-off points in Sokoto city (coordinates from Google Maps,
+// Oct 2026). With the backend, the list comes from GET /places instead, so places the admin adds in the
+// dashboard (streets, shops, estates the map doesn't know) show up in search and on the map. This list
+// is the built-in fallback and the seed data for that collection.
 type Row = [id: string, name: string, subtitle: string, category: PlaceCategory, lat: number, lng: number, popular?: boolean];
 
 const ROWS: Row[] = [
@@ -39,11 +41,28 @@ const ROWS: Row[] = [
   ["sokoto-airport", "Sultan Abubakar III International Airport", "Sokoto airport", "airport", 12.91771, 5.2084, true],
 ];
 
-type Landmark = Place & { popular: boolean };
+export type Landmark = Place & { popular: boolean };
 
-const BASE: Landmark[] = ROWS.map(([id, name, subtitle, category, latitude, longitude, popular]) => ({
+let BASE: Landmark[] = ROWS.map(([id, name, subtitle, category, latitude, longitude, popular]) => ({
   id, name, subtitle, category, location: { latitude, longitude }, popular: !!popular,
 }));
+
+// ---- Places from the server ----
+let version = 0;
+const listeners = new Set<() => void>();
+
+/** Replaces the built-in list with the server's (called once the app has loaded GET /places). */
+export function setPlaces(list: Landmark[]) {
+  if (!list.length) return;
+  BASE = list;
+  version++;
+  listeners.forEach((l) => l());
+}
+
+/** Changes whenever the place list does, so maps can redraw their labels. */
+export function usePlacesVersion(): number {
+  return useSyncExternalStore((cb) => { listeners.add(cb); return () => { listeners.delete(cb); }; }, () => version);
+}
 
 /** Landmarks as shown on the map (moved to your location in sample mode outside Sokoto). */
 export function landmarks(): Landmark[] {

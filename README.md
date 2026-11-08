@@ -1,7 +1,7 @@
 # Caliphate Rides
 
 One React Native (Expo) app for Sokoto, for riders and drivers both:
-- **Riding:** book a keke or car, see the fare up front (**distance × price per km**, ₦500 by default, set from the admin dashboard), and track your driver live.
+- **Riding:** book a keke or car, see the fare up front (**base fare + distance × price per km**, ₦500/km to start, set from the admin dashboard), and track your driver live.
 - **Driving:** sign up with a keke or car, keep your licence and papers up to date on an official record, take trips and get paid.
 
 Light and dark themes and an animated splash screen.
@@ -47,13 +47,16 @@ The app starts in **sample mode** (`EXPO_PUBLIC_USE_MOCK=true`). Any 6-digit cod
 ## How fares work
 
 ```
-fare = distance in km (rounded to 0.1 km) × price per km
+fare = base fare + (distance in km, rounded to 0.1 km) × price per km
+       rounded to the nearest ₦50, and never below the minimum fare
 ```
 
-- The price per km comes from the server (`GET /config/pricing`), which the admin edits. The default is ₦500.
-- The admin can also give **Keke** and **Car** their own price per km. When a ride type has none, it uses the main price.
-- The app fetches the latest price every time a rider opens the fare screen, so admin changes apply to the next booking.
-- The confirm screen shows the sum (e.g. `4.2 km × ₦500 per km = ₦2,100`) so riders can see how the fare was worked out.
+- Keke and car each have their own base fare, price per km and minimum, set on the admin dashboard's
+  Fares & commission page (`GET /config/pricing`). Start values: ₦500 per km, no base fare, ₦500 minimum.
+- The app fetches the latest prices every time a rider opens the fare screen, so admin changes apply to the next booking.
+- The confirm screen shows how the fare was worked out (e.g. `4.2 km × ₦500 per km = ₦2,100`, or `Minimum fare`).
+- Drivers see their share on every request ("You get ₦1,785 after 15% commission"), and their balance,
+  commission owed and withdrawals in the Earnings tab.
 - The **backend** computes the fare that is charged. The app uses the same rule (`src/lib/pricing.ts`) only to show it.
 
 ## Trying it outside Sokoto
@@ -65,7 +68,7 @@ In sample mode, if your phone is outside Sokoto, the app moves Sokoto's places (
 | How the rider pays | Where | Confirmed by |
 | --- | --- | --- |
 | Wallet | In the app | Taken automatically when the trip ends |
-| Card | In the app (Paystack) | Paystack, when the rider pays at the end |
+| Card | In the app (Flutterwave) | Flutterwave, when the rider pays at the end |
 | Cash | Directly to the driver | The driver taps "Cash received" |
 | Bank transfer | Directly to the driver's account (shown to the rider with a copy button) | The driver taps "Transfer received" |
 
@@ -83,7 +86,7 @@ Riders choose on the fare screen and can switch at the end of the trip. Every tr
 | Fare and ride type (Keke / Car), cash or wallet | `app/ride/confirm.tsx` |
 | Live tracking: finding a driver → driver on the way → arrived → on trip, with share trip and safety (112) | `app/ride/track.tsx` |
 | Trip complete, fare breakdown and rating | `app/ride/complete.tsx` |
-| Activity, Wallet (Paystack top-up), Account (theme, saved places, log out) | `app/(tabs)/` |
+| Activity, Wallet (Flutterwave top-up), Account (theme, saved places, log out) | `app/(tabs)/` |
 
 ## Driver mode: what a driver goes through
 
@@ -133,7 +136,7 @@ The rules (what's required for keke vs car, the minimum age of 18, the 30-day wa
 - **Trip steps:** Directions (opens Google Maps or Apple Maps) → I've arrived → Start trip → Complete trip → payment
 - **Payment, depending on how the rider pays:**
   - Wallet: paid automatically
-  - Card: waits for the rider to pay through Paystack
+  - Card: waits for the rider to pay through Flutterwave
   - Cash: the driver taps **Cash received**
   - Bank transfer: the app shows the driver's own account, and the driver taps **Transfer received** once the alert arrives
 - **Earnings** splits money paid in the app (paid out to the driver's bank) from money collected directly (cash and transfers), for today and this week.
@@ -190,16 +193,16 @@ Set `EXPO_PUBLIC_USE_MOCK=false` and `EXPO_PUBLIC_API_URL` in `.env`. The app ex
 | POST | `/auth/otp/verify` | `{ phone, code }` | `{ token, user, isNewUser }` |
 | GET | `/me` | | `{ user }` |
 | PATCH | `/me` | `{ name }` | `{ user }` |
-| GET | `/config/pricing` | | `{ currency, ratePerKm, rideTypes[] }` |
+| GET | `/config/pricing` | | `{ currency, roundTo, rideTypes[{ id, baseFare, perKm, minimumFare, … }] }` |
 | POST | `/rides/quote` | `{ pickup, destination }` | `{ quotes[] }` |
 | POST | `/rides` | `{ pickup, destination, rideType, paymentMethod }` | `{ ride }` |
 | POST | `/rides/:id/cancel` | `{ reason? }` | `{ ride }` |
 | POST | `/rides/:id/rate` | `{ stars, comment? }` | `{ ok }` |
 | GET | `/rides/history` | | `{ trips[] }` |
 | GET | `/wallet` | | `{ balance, transactions[] }` |
-| POST | `/wallet/topup` | `{ amount }` | `{ authorizationUrl }` (Paystack) |
+| POST | `/wallet/topup` | `{ amount }` | `{ checkoutUrl }` (Flutterwave) |
 | PATCH | `/rides/:id/payment` | `{ paymentMethod }` | `{ ride }` |
-| POST | `/rides/:id/pay` | | `{ authorizationUrl }` (card, Paystack) |
+| POST | `/rides/:id/pay` | | `{ checkoutUrl }` (card, Flutterwave) |
 
 **Real-time** (Socket.IO, `auth: { token }`)
 
@@ -215,6 +218,7 @@ The app has its own map. It doesn't use Google Maps or Apple Maps, and needs no 
 
 - **Map:** OpenStreetMap data drawn by [MapLibre](https://maplibre.org) in our own white-and-green style, in light and dark (`src/map/style.ts`). In your own build it uses MapLibre's native engine; in Expo Go the same map is drawn in a web view (`src/components/map/`). Both look the same and the screens don't need to know which one is running. Our 30 Sokoto places are drawn on it in their category colours: markets amber, mosques teal, hospitals red, and so on.
 - **Routes:** real road routes from OSRM (`src/services/routing.ts`). They give every trip its distance, time and the green route line. If the routing server can't be reached, the app falls back to an estimate.
+- **Live tracking** (`src/hooks/useLiveRoute.ts`): while a driver is coming and during the trip, the green line follows the roads from the car to the pickup or destination, shrinks as the car drives, and is fetched again if the driver leaves it by more than 50 m. The car is drawn on the road facing the way the road goes, and the time left comes from the road route. In sample mode the driver's trip screen drives the car along the route by itself.
 - **Search:** our Sokoto places first, then OpenStreetMap places from Photon, limited to the service area (`src/services/places.ts`). Google Places is optional: set `EXPO_PUBLIC_GOOGLE_MAPS_API_KEY` to add it.
 - **Servers:** out of the box the app uses free public servers (OpenFreeMap tiles, the OSRM demo server, Photon's public server). They're fine for testing. Before launch, run our own map server (the `caliphate-map-server` folder, with step-by-step instructions) and set the four `EXPO_PUBLIC_MAP_*`, `ROUTING_URL` and `SEARCH_URL` values in `.env`.
 - **Credit:** OpenStreetMap's licence requires "© OpenStreetMap contributors" to be shown. MapLibre's small (i) button on the map shows it. Keep it visible.

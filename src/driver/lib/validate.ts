@@ -50,6 +50,18 @@ export function validateGuarantor(g: DriverApplication["guarantor"], driverPhone
   return e;
 }
 
+/** The vehicle owner's details (only when the driver drives someone else's vehicle). */
+export function validateOwner(o: DriverApplication["owner"], driverPhone: string): Errors {
+  const e: Errors = {};
+  if (o.fullName.trim().split(/\s+/).length < 2) e.fullName = "Enter the owner's full name.";
+  const ph = normalizeNgPhone(o.phone);
+  if (!ph) e.phone = "Enter the owner's Nigerian mobile number.";
+  else if (driverPhone && ph === driverPhone) e.phone = "Enter the owner's own number, not yours.";
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(o.email.trim())) e.email = "Enter the owner's email address.";
+  if (o.address.trim().length < 8) e.address = "Enter the owner's house address.";
+  return e;
+}
+
 export function validateBank(b: DriverApplication["bank"]): Errors {
   const e: Errors = {};
   if (!b.bankName) e.bankName = "Choose your bank.";
@@ -59,8 +71,9 @@ export function validateBank(b: DriverApplication["bank"]): Errors {
 }
 
 /** Validates one document upload. */
-export function validateDocument(input: { files: (string | undefined)[]; photoCount: number; number?: string; needsNumber?: string; expiryText?: string; needsExpiry: boolean }): Errors {
+export function validateDocument(input: { files: (string | undefined)[]; photoCount: number; number?: string; needsNumber?: string; expiryText?: string; needsExpiry: boolean; variants?: string[]; variant?: string }): Errors {
   const e: Errors = {};
+  if (input.variants?.length && !input.variants.includes(input.variant ?? "")) e.variant = "Choose which document this is.";
   if (input.files.filter(Boolean).length < input.photoCount) e.files = input.photoCount > 1 ? "Add a photo of each side." : "Add a photo.";
   if (input.needsNumber && !(input.number ?? "").trim()) e.number = `Enter the ${input.needsNumber.toLowerCase()}.`;
   if (input.needsExpiry) {
@@ -77,6 +90,7 @@ export function missingSections(app: DriverApplication): string[] {
   if (!app.vehicleType) missing.push("Vehicle type");
   if (Object.keys(validatePersonal(app.personal, toDmyOrEmpty(app.personal.dateOfBirth))).length) missing.push("Personal details");
   if (Object.keys(validateVehicle(app.vehicle)).length) missing.push("Vehicle details");
+  if (!app.vehicle.ownsVehicle && Object.keys(validateOwner(app.owner ?? EMPTY_OWNER, "")).length) missing.push("Vehicle owner");
   if (app.vehicleType) {
     for (const d of documentsFor(app.vehicleType, app.vehicle.ownsVehicle)) {
       if (d.required(app.vehicleType, app.vehicle.ownsVehicle) && !app.documents[d.kind]?.current) missing.push(d.title);
@@ -86,6 +100,8 @@ export function missingSections(app: DriverApplication): string[] {
   if (Object.keys(validateBank(app.bank)).length) missing.push("Bank account");
   return missing;
 }
+
+export const EMPTY_OWNER: DriverApplication["owner"] = { fullName: "", phone: "", email: "", address: "" };
 
 function toDmyOrEmpty(iso: string) {
   if (!iso) return "";

@@ -14,8 +14,9 @@ import { Glass, Tag } from "../../src/components/visual";
 import { fonts } from "../../src/theme/tokens";
 import { ENV } from "../../src/config/env";
 import { BRAND } from "../../src/config/brand";
+import { useLiveRoute } from "../../src/hooks/useLiveRoute";
 import { useSmoothPosition } from "../../src/hooks/useSmoothPosition";
-import { haversineKm, trimPathFrom } from "../../src/lib/geo";
+import { haversineKm } from "../../src/lib/geo";
 import { paymentOption } from "../../src/lib/payments";
 import { formatNaira } from "../../src/lib/pricing";
 import { useRide } from "../../src/store/ride";
@@ -38,6 +39,12 @@ export default function Track() {
   const startKm = useRef<number | null>(null);
 
   const status = ride?.status;
+
+  // The live road route: driver → pickup while they're coming, then car → destination during the trip.
+  // The green line follows the roads, shrinks as the car drives, and is re-fetched if the driver leaves it.
+  const moving = status === "accepted" || status === "in_progress";
+  const liveTarget = !ride || !moving ? null : status === "in_progress" ? ride.destination.location : ride.pickup.location;
+  const live = useLiveRoute(moving ? smooth?.location ?? null : null, liveTarget, status === "in_progress" ? ride?.route : undefined);
   useEffect(() => {
     if (status === "completed") router.replace("/ride/complete");
     startKm.current = null;
@@ -49,24 +56,27 @@ export default function Track() {
     if (!ride) return;
     const d = driverPosition?.location;
     const pts =
-      status === "searching" ? [ride.pickup.location]
+      live.path.length > 1 ? live.path // the whole road route still ahead
+      : status === "searching" ? [ride.pickup.location]
       : status === "in_progress" ? [d ?? ride.pickup.location, ride.destination.location]
       : d ? [d, ride.pickup.location] : [ride.pickup.location];
     frame(map.current, pts, { top: insets.top + 80, bottom: sheetH + 24 });
-  }, [status, hasDriver, sheetH]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [status, hasDriver, sheetH, live.version]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!ride) return <Missing message="You don't have a ride in progress." />;
 
   const driver = ride.driver;
   const kind = ride.rideType === "keke" ? "keke" : "car";
-  const car = smooth?.location;
+  // The car is drawn on the road, facing the way the road goes.
+  const car = live.position ?? smooth?.location;
+  const carHeading = live.heading ?? smooth?.heading ?? 0;
   const target = status === "in_progress" ? ride.destination.location : ride.pickup.location;
-  const remainingKm = car ? haversineKm(car, target) * ROAD_FACTOR : null;
+  // Distance and time left come from the road route; until it loads, a straight-line estimate.
+  const remainingKm = live.remainingKm ?? (car ? haversineKm(car, target) * ROAD_FACTOR : null);
   if (remainingKm !== null && startKm.current === null) startKm.current = remainingKm;
-  const etaMin = remainingKm !== null ? Math.max(1, Math.ceil((remainingKm / KMH[ride.rideType]) * 60)) : null;
+  const etaMin = live.etaMin ?? (remainingKm !== null ? Math.max(1, Math.ceil((remainingKm / KMH[ride.rideType]) * 60)) : null);
   const progress = remainingKm !== null && startKm.current ? 1 - remainingKm / startKm.current : 0;
   const arriveBy = etaMin ? new Date(Date.now() + etaMin * 60000).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }) : "";
-  const routeLeft = status === "in_progress" && car ? trimPathFrom(ride.route, car) : status === "accepted" && car ? [car, ride.pickup.location] : [];
 
   const shareTrip = () =>
     Share.share({ message: `I'm on a ${BRAND.name} trip to ${ride.destination.name}${driver ? ` with ${driver.name} (${driver.vehicle.plate})` : ""}. Follow it live: ${ENV.shareBaseUrl}/${ride.id}` });
@@ -90,10 +100,10 @@ export default function Track() {
   return (
     <View style={{ flex: 1, backgroundColor: colors.paper }}>
       <RideMap ref={map} center={ride.pickup.location}>
-        <RouteLine path={routeLeft} />
-        {status !== "in_progress" && <PickupPin coordinate={ride.pickup.location} />}
-        {status === "in_progress" && <DropPin coordinate={ride.destination.location} />}
-        {car && status !== "searching" && <DriverMarker coordinate={car} heading={smooth?.heading ?? 0} rideType={ride.rideType} />}
+        <RouteLine path={moving ? live.path : []} />
+        {status !== "in_progress" && <PickupPin coordinate={ride.pickup.location} label={status === "accepted" && etaMin ? `${etaMin} min` : undefined} />}
+        {status === "in_progress" && <DropPin coordinate={ride.destination.location} label={arriveBy || undefined} />}
+        {car && status !== "searching" && <DriverMarker coordinate={car} heading={carHeading} rideType={ride.rideType} />}
       </RideMap>
       <View style={{ position: "absolute", top: insets.top + 10, left: 16, right: 16, flexDirection: "row", alignItems: "center", gap: 10 }}>
         <MapButton name="back" label="Back to home" onPress={() => router.navigate("/(tabs)")} style={{ position: "relative" }} />

@@ -52,17 +52,47 @@ export function remainingPath(path: LatLng[], km: number): LatLng[] {
   return [point, ...path.slice(index)];
 }
 
-/** The rest of a route from the vertex nearest to `point` (for drawing what's left of a trip). */
-export function trimPathFrom(path: LatLng[], point: LatLng): LatLng[] {
-  if (path.length < 2) return path;
-  let best = 0, bestKm = Infinity;
-  for (let i = 0; i < path.length; i++) {
-    const km = haversineKm(path[i], point);
-    if (km < bestKm) { best = i; bestKm = km; }
+/** Where a point sits on a path: the nearest point on the line, which segment it's on, and how far off the line it is. */
+export type PathSnap = {
+  point: LatLng; // nearest point on the path
+  index: number; // the path vertex that comes next after `point`
+  offsetKm: number; // distance from the original point to the path
+  heading: number; // compass direction of the road at that point
+};
+
+/**
+ * Snaps a point onto a path (e.g. a GPS fix onto the road route). Works on segments, not just vertices.
+ * `fromIndex` skips segments already driven, so a route that passes near itself doesn't make the car jump ahead.
+ */
+export function snapToPath(path: LatLng[], p: LatLng, fromIndex = 1): PathSnap | null {
+  if (path.length < 2) return null;
+  // Flat projection around p: plenty accurate over a city.
+  const kx = 111.32 * Math.cos(rad(p.latitude));
+  const ky = 110.574;
+  let best: PathSnap | null = null;
+  let bestD2 = Infinity;
+  for (let i = Math.max(1, Math.min(fromIndex, path.length - 1)); i < path.length; i++) {
+    const a = path[i - 1], b = path[i];
+    const ax = (a.longitude - p.longitude) * kx, ay = (a.latitude - p.latitude) * ky;
+    const bx = (b.longitude - p.longitude) * kx, by = (b.latitude - p.latitude) * ky;
+    const dx = bx - ax, dy = by - ay;
+    const len2 = dx * dx + dy * dy;
+    const t = len2 === 0 ? 0 : Math.max(0, Math.min(1, -(ax * dx + ay * dy) / len2));
+    const qx = ax + t * dx, qy = ay + t * dy;
+    const d2 = qx * qx + qy * qy;
+    if (d2 < bestD2) {
+      bestD2 = d2;
+      best = { point: lerp(a, b, t), index: i, offsetKm: Math.sqrt(d2), heading: bearing(a, b) };
+    }
   }
-  // If the driver is past the nearest vertex, drop it so the line doesn't double back.
-  const next = best < path.length - 1 && haversineKm(path[best + 1], point) < haversineKm(path[best + 1], path[best]) ? best + 1 : best;
-  return [point, ...path.slice(next)];
+  return best;
+}
+
+/** The rest of a route from wherever `point` sits on it (for drawing what's left of a trip). */
+export function trimPathFrom(path: LatLng[], point: LatLng): LatLng[] {
+  const snap = snapToPath(path, point);
+  if (!snap) return path;
+  return [snap.point, ...path.slice(snap.index)];
 }
 
 /** Decodes a Google encoded polyline. */

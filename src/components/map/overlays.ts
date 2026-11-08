@@ -4,7 +4,7 @@ import type { RideTypeId } from "../../lib/pricing";
 
 /** Things drawn on top of the map: pins, the driver, the route. */
 export type Overlay =
-  | { kind: "user" | "pickup" | "drop"; at: LatLng }
+  | { kind: "user" | "pickup" | "drop"; at: LatLng; label?: string }
   | { kind: "driver"; at: LatLng; heading: number; rideType: RideTypeId }
   | { kind: "route"; path: LatLng[] };
 

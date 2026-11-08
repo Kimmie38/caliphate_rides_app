@@ -59,7 +59,7 @@ export default function Review() {
 
       <Section title="Vehicle" onEdit={() => router.push("/driver/onboarding")}>
         <Row k="Type" v={a.vehicleType === "keke" ? "Keke" : a.vehicleType === "car" ? "Car" : "Not chosen"} />
-        <Row k="Owner" v={a.vehicle.ownsVehicle ? "You" : "Someone else (letter attached)"} />
+        <Row k="Owner" v={a.vehicle.ownsVehicle ? "You" : "Someone else: you drive for the owner"} />
       </Section>
       <Section title="About you" onEdit={() => router.push("/driver/onboarding/personal")}>
         <Row k="Name" v={a.personal.fullName} />
@@ -72,8 +72,19 @@ export default function Review() {
         <Row k="Vehicle" v={[a.vehicle.colour, a.vehicle.make, a.vehicle.model, a.vehicle.year && `(${a.vehicle.year})`].filter(Boolean).join(" ")} />
         <Row k="Plate" v={a.vehicle.plate} />
       </Section>
+      {!a.vehicle.ownsVehicle ? (
+        <Section title="Vehicle owner" onEdit={() => router.push("/driver/onboarding/vehicle")}>
+          <Row k="Name" v={a.owner?.fullName ?? ""} />
+          <Row k="Phone" v={normalizeNgPhone(a.owner?.phone ?? "") ? formatNgPhone(normalizeNgPhone(a.owner!.phone)!) : a.owner?.phone ?? ""} />
+          <Row k="Email" v={a.owner?.email ?? ""} />
+          <Row k="Address" v={a.owner?.address ?? ""} />
+        </Section>
+      ) : null}
       <Section title="Documents" onEdit={() => router.push("/driver/onboarding/documents")}>
-        {docs.map((d) => <Row key={d.kind} k={d.title} v={a.documents[d.kind]?.current?.expiry ? `Expires ${prettyDate(a.documents[d.kind]!.current!.expiry)}` : "Added"} />)}
+        {docs.map((d) => {
+          const cur = a.documents[d.kind]?.current;
+          return <Row key={d.kind} k={d.title} v={[cur?.variant, cur?.expiry ? `Expires ${prettyDate(cur.expiry)}` : "Added"].filter(Boolean).join(" · ")} />;
+        })}
       </Section>
       <Section title="Guarantor" onEdit={() => router.push("/driver/onboarding/guarantor")}>
         <Row k="Name" v={a.guarantor.fullName} />
@@ -88,7 +99,7 @@ export default function Review() {
       <View style={{ gap: 12, backgroundColor: colors.mist, borderRadius: 18, padding: 16 }}>
         <Txt variant="heading">Declaration</Txt>
         <Txt color="muted">
-          I confirm that the information and documents I've given are true and belong to me. I understand that Caliphate Rides keeps them as my official driver record, checks them with the issuing bodies, and may contact my guarantor. I will keep my licence and vehicle papers valid and update them before they expire.
+          I confirm that the information and documents I've given are true{a.vehicle.ownsVehicle ? " and belong to me" : ", and that the vehicle's owner has allowed me to drive it for Caliphate Rides"}. I understand that Caliphate Rides keeps them as my official driver record, checks them with the issuing bodies, and may contact my guarantor{a.vehicle.ownsVehicle ? "" : " and the vehicle's owner"}. I will keep my licence and vehicle papers valid and update them before they expire.
         </Txt>
         <Pressable accessibilityRole="checkbox" accessibilityState={{ checked: agreed }} onPress={() => { tap(); setAgreed(!agreed); }} style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
           <View style={{ width: 26, height: 26, borderRadius: 8, borderWidth: 2, borderColor: agreed ? colors.green : colors.line, backgroundColor: agreed ? colors.green : "transparent", alignItems: "center", justifyContent: "center" }}>
