@@ -10,9 +10,11 @@ import { useMode, type Mode } from "../src/store/mode";
 import { useSession } from "../src/store/session";
 import { useTheme } from "../src/theme/ThemeProvider";
 import { fonts, shadow } from "../src/theme/tokens";
+import { t, useI18n } from "../src/i18n";
 
 /** First time only: ride or drive. Switch any time from Account. */
 export default function Start() {
+  useI18n();
   const { colors, isDark } = useTheme();
   const insets = useSafeAreaInsets();
   const { user } = useSession();
@@ -24,17 +26,17 @@ export default function Start() {
   return (
     <View style={{ flex: 1, backgroundColor: colors.canvas, paddingTop: insets.top + 28, paddingHorizontal: 20, paddingBottom: insets.bottom + 20, gap: 16 }}>
       <KnotTile size={52} />
-      <Txt variant="hero" style={{ marginTop: 8 }}>Sannu, {first}. How do you want to use Caliphate Rides?</Txt>
+      <Txt variant="hero" style={{ marginTop: 8 }}>{t("Sannu, {0}. How do you want to use Caliphate Rides?", first)}</Txt>
 
       <Animated.View entering={FadeInDown.duration(450).delay(100)}>
-        <Pressable accessibilityRole="button" accessibilityLabel="Ride. Book a keke or car around Sokoto." onPress={() => choose("rider")}
+        <Pressable accessibilityRole="button" accessibilityLabel={t("Ride. Book a keke or car around Sokoto.")} onPress={() => choose("rider")}
           style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.98 : 1 }] })}>
           <View style={{ backgroundColor: colors.paper, borderRadius: 28, padding: 18, flexDirection: "row", alignItems: "center", gap: 12, borderWidth: isDark ? 1 : 0, borderColor: colors.line, ...shadow(2, isDark) }}>
             <View style={{ flex: 1, gap: 6 }}>
-              <Txt variant="title" style={{ fontSize: 24 }}>Ride</Txt>
-              <Txt color="muted">Book a keke or car around Sokoto and track it live.</Txt>
+              <Txt variant="title" style={{ fontSize: 24 }}>{t("Ride")}</Txt>
+              <Txt color="muted">{t("Book a keke or car around Sokoto and track it live.")}</Txt>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginTop: 4 }}>
-                <Txt variant="label" color="greenText">Start riding</Txt><Icon name="arrow" size={16} color={colors.greenText} />
+                <Txt variant="label" color="greenText">{t("Start riding")}</Txt><Icon name="arrow" size={16} color={colors.greenText} />
               </View>
             </View>
             <KekeArt width={118} />
@@ -43,14 +45,14 @@ export default function Start() {
       </Animated.View>
 
       <Animated.View entering={FadeInDown.duration(450).delay(220)}>
-        <Pressable accessibilityRole="button" accessibilityLabel="Drive. Sign up with your keke or car and earn." onPress={() => choose("driver")}
+        <Pressable accessibilityRole="button" accessibilityLabel={t("Drive. Sign up with your keke or car and earn.")} onPress={() => choose("driver")}
           style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.98 : 1 }] })}>
           <Hero glowing style={{ padding: 18, flexDirection: "row", alignItems: "center", gap: 12 }}>
             <View style={{ flex: 1, gap: 6 }}>
-              <Txt style={{ fontFamily: fonts.display, fontSize: 24, color: "#FFFFFF" }}>Drive</Txt>
-              <Txt style={{ color: "#FFFFFF", opacity: 0.88 }}>Sign up with your keke or car and earn on your own time.</Txt>
+              <Txt style={{ fontFamily: fonts.display, fontSize: 24, color: "#FFFFFF" }}>{t("Drive")}</Txt>
+              <Txt style={{ color: "#FFFFFF", opacity: 0.88 }}>{t("Sign up with your keke or car and earn on your own time.")}</Txt>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginTop: 4 }}>
-                <Txt variant="label" style={{ color: "#FFFFFF" }}>Become a driver</Txt><Icon name="arrow" size={16} color="#FFFFFF" />
+                <Txt variant="label" style={{ color: "#FFFFFF" }}>{t("Become a driver")}</Txt><Icon name="arrow" size={16} color="#FFFFFF" />
               </View>
             </View>
             <CarArt width={118} />
@@ -59,7 +61,7 @@ export default function Start() {
       </Animated.View>
 
       <View style={{ flex: 1 }} />
-      <Txt variant="caption" color="muted" align="center">You can switch between riding and driving any time from Account.</Txt>
+      <Txt variant="caption" color="muted" align="center">{t("You can switch between riding and driving any time from Account.")}</Txt>
     </View>
   );
 }

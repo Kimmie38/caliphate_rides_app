@@ -15,6 +15,7 @@ import { useMode } from "../../src/store/mode";
 import { useSession } from "../../src/store/session";
 import { useTheme } from "../../src/theme/ThemeProvider";
 import type { ApplicationStatus } from "../../src/driver/types";
+import { t, useI18n } from "../../src/i18n";
 
 const STATUS: Record<ApplicationStatus, { pill: string; tone: "green" | "amber" | "red" | "grey"; title: string; body: string }> = {
   draft: { pill: "Not sent", tone: "grey", title: "Finish your application", body: "" },
@@ -27,6 +28,7 @@ const STATUS: Record<ApplicationStatus, { pill: string; tone: "green" | "amber" 
 
 /** Application status while under review, and the driver's official record once approved. */
 export default function ApplicationScreen() {
+  useI18n();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const { application: a, refresh, mockReview } = useApplication();
@@ -35,7 +37,8 @@ export default function ApplicationScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
   if (!a) return null;
-  const s = STATUS[a.status];
+  const s0 = STATUS[a.status];
+  const s = { ...s0, pill: t(s0.pill), title: t(s0.title), body: s0.body ? t(s0.body) : "" };
   const isDriver = a.status === "approved" || a.status === "suspended";
   const docs = a.vehicleType ? documentsFor(a.vehicleType, a.vehicle.ownsVehicle).filter((d) => a.documents[d.kind]) : [];
 
@@ -48,7 +51,7 @@ export default function ApplicationScreen() {
       refreshControl={<RefreshControl refreshing={refreshing} tintColor={colors.green} onRefresh={async () => { setRefreshing(true); await refresh(); setRefreshing(false); }} />}
     >
       <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-        {isDriver ? <IconButton name="back" label="Back" onPress={() => goBack("/driver/account")} size={44} style={{ borderRadius: 14 }} /> : <Logo size={48} />}
+        {isDriver ? <IconButton name="back" label={t("Back")} onPress={() => goBack("/driver/account")} size={44} style={{ borderRadius: 14 }} /> : <Logo size={48} />}
         <View style={{ flex: 1 }} />
         <Pill text={s.pill} tone={s.tone} />
       </View>
@@ -65,31 +68,31 @@ export default function ApplicationScreen() {
               <Txt variant="bodyStrong">{a.reviewNote}</Txt>
             </View>
           ) : null}
-          <Button title="Fix and send again" onPress={() => router.push("/driver/onboarding/documents")} />
+          <Button title={t("Fix and send again")} onPress={() => router.push("/driver/onboarding/documents")} />
         </View>
       ) : null}
 
       {/* The official record */}
       <View style={{ borderWidth: 1.5, borderColor: colors.line, borderRadius: 18, padding: 16, gap: 10 }}>
-        <Txt variant="label" color="muted">Record number</Txt>
+        <Txt variant="label" color="muted">{t("Record number")}</Txt>
         <Txt variant="title" tabular selectable>{a.recordId}</Txt>
         <View style={{ height: 1, backgroundColor: colors.line }} />
         <Row k="Name" v={a.personal.fullName} />
         <Row k="Phone" v={user ? formatNgPhone(user.phone) : ""} />
         <Row k="LGA" v={a.personal.lga} />
-        <Row k="Vehicle" v={`${a.vehicleType === "keke" ? "Keke" : "Car"} · ${[a.vehicle.colour, a.vehicle.make, a.vehicle.model].filter(Boolean).join(" ")}`} />
+        <Row k="Vehicle" v={`${a.vehicleType === "keke" ? t("Keke") : t("Car")} · ${[a.vehicle.colour, a.vehicle.make, a.vehicle.model].filter(Boolean).join(" ")}`} />
         <Row k="Plate" v={a.vehicle.plate} />
-        <Row k="Owner" v={a.vehicle.ownsVehicle ? "The driver" : `${a.owner?.fullName || "Not given"} (drives for the owner)`} />
+        <Row k="Owner" v={a.vehicle.ownsVehicle ? t("The driver") : t("{0} (drives for the owner)", a.owner?.fullName || t("Not given"))} />
         {!a.vehicle.ownsVehicle ? <Row k="Owner's contact" v={[a.owner?.phone, a.owner?.email].filter(Boolean).join(" · ")} /> : null}
-        <Row k="Guarantor" v={`${a.guarantor.fullName} (${a.guarantor.relationship.toLowerCase()})`} />
+        <Row k="Guarantor" v={`${a.guarantor.fullName} (${t(a.guarantor.relationship).toLowerCase()})`} />
         <Row k="Payouts" v={`${a.bank.bankName} · ${a.bank.accountNumber}`} />
-        <Row k="Submitted" v={a.submittedAt ? prettyDateTime(a.submittedAt) : "Not yet"} />
+        <Row k="Submitted" v={a.submittedAt ? prettyDateTime(a.submittedAt) : t("Not yet")} />
         {a.approvedAt ? <Row k="Approved" v={prettyDateTime(a.approvedAt)} /> : null}
         {a.declaration ? <Row k="Signed" v={`${a.declaration.signedName}, ${prettyDate(a.declaration.signedAt.slice(0, 10))}`} /> : null}
       </View>
 
       <View style={{ gap: 4 }}>
-        <Txt variant="heading">Documents</Txt>
+        <Txt variant="heading">{t("Documents")}</Txt>
         {docs.map((d) => {
           const v = a.documents[d.kind]!.current!;
           const versions = 1 + (a.documents[d.kind]!.history.length);
@@ -98,19 +101,19 @@ export default function ApplicationScreen() {
               onPress={() => { tap(); router.push({ pathname: "/driver/document/[kind]", params: { kind: d.kind } }); }}
               style={{ flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.line }}>
               <View style={{ flex: 1, gap: 2 }}>
-                <Txt variant="bodyStrong">{d.title}</Txt>
+                <Txt variant="bodyStrong">{t(d.title)}</Txt>
                 <Txt variant="caption" color="muted">
-                  {v.variant ? `${v.variant} · ` : ""}{v.expiry ? `Expires ${prettyDate(v.expiry)} · ` : ""}{versions} version{versions > 1 ? "s" : ""} on record
+                  {v.variant ? `${t(v.variant)} · ` : ""}{v.expiry ? `${t("Expires {0}", prettyDate(v.expiry))} · ` : ""}{versions > 1 ? t("{0} versions on record", versions) : t("1 version on record")}
                 </Txt>
               </View>
-              <Pill text={v.status === "approved" ? "Approved" : v.status === "pending" ? "Being checked" : "Not accepted"} tone={v.status === "approved" ? "green" : v.status === "pending" ? "amber" : "red"} />
+              <Pill text={v.status === "approved" ? t("Approved") : v.status === "pending" ? t("Being checked") : t("Not accepted")} tone={v.status === "approved" ? "green" : v.status === "pending" ? "amber" : "red"} />
             </Pressable>
           );
         })}
       </View>
 
       <View style={{ gap: 10 }}>
-        <Txt variant="heading">History</Txt>
+        <Txt variant="heading">{t("History")}</Txt>
         {a.timeline.map((t, i) => (
           <View key={`${t.at}-${i}`} style={{ flexDirection: "row", gap: 12 }}>
             <View style={{ alignItems: "center", width: 12 }}>
@@ -127,16 +130,16 @@ export default function ApplicationScreen() {
 
       {ENV.useMock && a.status === "submitted" ? (
         <View style={{ gap: 10, backgroundColor: colors.mist, borderRadius: 18, padding: 16 }}>
-          <Txt variant="heading">Sample mode</Txt>
-          <Txt variant="caption" color="muted">In the real app, your team does this from the admin dashboard.</Txt>
-          <Button title="Approve this driver" onPress={() => review("approve")} loading={busy === "approve"} />
-          <Button title="Ask for a change" variant="outline" onPress={() => review("changes")} loading={busy === "changes"} />
+          <Txt variant="heading">{t("Sample mode")}</Txt>
+          <Txt variant="caption" color="muted">{t("In the real app, your team does this from the admin dashboard.")}</Txt>
+          <Button title={t("Approve this driver")} onPress={() => review("approve")} loading={busy === "approve"} />
+          <Button title={t("Ask for a change")} variant="outline" onPress={() => review("changes")} loading={busy === "changes"} />
         </View>
       ) : null}
 
       {!isDriver ? (
         <Pressable accessibilityRole="button" onPress={() => setMode("rider")} style={{ alignSelf: "center", padding: 8 }}>
-          <Txt variant="label" color="greenText">Book a ride while you wait</Txt>
+          <Txt variant="label" color="greenText">{t("Book a ride while you wait")}</Txt>
         </Pressable>
       ) : null}
     </ScrollView>
@@ -146,7 +149,7 @@ export default function ApplicationScreen() {
 function Row({ k, v }: { k: string; v: string }) {
   return (
     <View style={{ flexDirection: "row", gap: 12 }}>
-      <Txt variant="caption" color="muted" style={{ width: 90 }}>{k}</Txt>
+      <Txt variant="caption" color="muted" style={{ width: 90 }}>{t(k)}</Txt>
       <Txt variant="caption" style={{ flex: 1 }} selectable>{v || "—"}</Txt>
     </View>
   );

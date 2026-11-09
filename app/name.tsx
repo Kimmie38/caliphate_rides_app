@@ -7,8 +7,10 @@ import { updateProfile } from "../src/services/auth";
 import { useSession } from "../src/store/session";
 import { useTheme } from "../src/theme/ThemeProvider";
 import { fonts } from "../src/theme/tokens";
+import { t, useI18n } from "../src/i18n";
 
 export default function Name() {
+  useI18n();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const { user, updateUser } = useSession();
@@ -24,7 +26,7 @@ export default function Name() {
       // Saving the name opens the app: the guards in app/_layout.tsx switch screens automatically.
       await updateUser(await updateProfile({ name: name.trim() || DEMO_RIDER.name }, user));
     } catch (e: any) {
-      setError(e?.message ?? "Couldn't save your name. Try again.");
+      setError(e?.message ?? t("Couldn't save your name. Try again."));
     } finally {
       setLoading(false);
     }
@@ -33,13 +35,13 @@ export default function Name() {
   return (
     <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1, backgroundColor: colors.paper }}>
       <View style={{ flex: 1, paddingHorizontal: 24, paddingTop: insets.top + 60, paddingBottom: insets.bottom + 24, gap: 14 }}>
-        <Txt variant="hero">What should drivers call you?</Txt>
-        <Txt color="muted">Your driver sees your first name when they accept your ride.</Txt>
+        <Txt variant="hero">{t("What should drivers call you?")}</Txt>
+        <Txt color="muted">{t("Your driver sees your first name when they accept your ride.")}</Txt>
         <TextInput
           value={name}
           onChangeText={(t) => { setName(t); setError(null); }}
           onSubmitEditing={save}
-          placeholder="Full name"
+          placeholder={t("Full name")}
           placeholderTextColor={colors.muted}
           autoFocus
           autoCapitalize="words"
@@ -49,7 +51,7 @@ export default function Name() {
         />
         {error ? <Txt variant="caption" style={{ color: colors.danger }}>{error}</Txt> : null}
         <View style={{ flex: 1 }} />
-        <Button title="Continue" onPress={save} loading={loading} disabled={!valid} />
+        <Button title={t("Continue")} onPress={save} loading={loading} disabled={!valid} />
       </View>
     </KeyboardAvoidingView>
   );

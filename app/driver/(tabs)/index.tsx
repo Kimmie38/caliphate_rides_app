@@ -19,8 +19,10 @@ import { getEarnings } from "../../../src/driver/services/trips";
 import { drivingBlockers, expiringSoon, useApplication } from "../../../src/driver/store/application";
 import { useDriving } from "../../../src/driver/store/driving";
 import { useTheme } from "../../../src/theme/ThemeProvider";
+import { t, useI18n } from "../../../src/i18n";
 
 export default function Drive() {
+  useI18n();
   const { colors, isDark } = useTheme();
   const insets = useSafeAreaInsets();
   const tabH = useTabBarHeight();
@@ -53,7 +55,7 @@ export default function Drive() {
   }, [d.request?.id, sheetH, d.position.location.latitude, d.position.location.longitude]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    if (d.notice) { Alert.alert("Trip cancelled", d.notice); d.clearNotice(); }
+    if (d.notice) { Alert.alert(t("Trip cancelled"), d.notice); d.clearNotice(); }
   }, [d.notice]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Going offline automatically if a document stops being valid.
@@ -61,16 +63,16 @@ export default function Drive() {
 
   const goOnline = () => {
     if (blockers.length) {
-      Alert.alert("You can't go online yet", blockers.map((b) => `${b.title}: ${b.reason}`).join("\n"), [
-        { text: "Close", style: "cancel" },
-        { text: "Update", onPress: () => router.push({ pathname: "/driver/document/[kind]", params: { kind: blockers[0].kind } }) },
+      Alert.alert(t("You can't go online yet"), blockers.map((b) => `${t(b.title)}: ${t(b.reason)}`).join("\n"), [
+        { text: t("Close"), style: "cancel" },
+        { text: t("Update"), onPress: () => router.push({ pathname: "/driver/document/[kind]", params: { kind: blockers[0].kind } }) },
       ]);
       return;
     }
     if (d.locationStatus === "denied") {
-      Alert.alert("Turn on location", "Riders can only find you when your location is on.", [
-        { text: "Close", style: "cancel" },
-        { text: "Open settings", onPress: () => Linking.openSettings() },
+      Alert.alert(t("Turn on location"), t("Riders can only find you when your location is on."), [
+        { text: t("Close"), style: "cancel" },
+        { text: t("Open settings"), onPress: () => Linking.openSettings() },
       ]);
       return;
     }
@@ -80,7 +82,7 @@ export default function Drive() {
   const accept = async () => {
     setAccepting(true);
     try { await d.accept(); router.push("/driver/trip"); }
-    catch (e: any) { Alert.alert("Couldn't accept", e?.message ?? "The rider may have cancelled."); }
+    catch (e: any) { Alert.alert(t("Couldn't accept"), e?.message ?? t("The rider may have cancelled.")); }
     finally { setAccepting(false); }
   };
 
@@ -95,26 +97,26 @@ export default function Drive() {
         {d.online ? (
           <View style={{ flexDirection: "row", alignItems: "center", gap: 8, backgroundColor: colors.green, borderRadius: 999, paddingHorizontal: 16, paddingVertical: 12, ...glow(isDark) }}>
             <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: colors.greenInk }} />
-            <Txt style={{ fontFamily: fonts.display, fontSize: 14, color: colors.greenInk }}>Online</Txt>
+            <Txt style={{ fontFamily: fonts.display, fontSize: 14, color: colors.greenInk }}>{t("Online")}</Txt>
           </View>
         ) : (
           <Glass style={{ flexDirection: "row", alignItems: "center", gap: 8, borderRadius: 999, paddingHorizontal: 16, paddingVertical: 12 }}>
             <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: colors.muted }} />
-            <Txt style={{ fontFamily: fonts.display, fontSize: 14 }}>Offline</Txt>
+            <Txt style={{ fontFamily: fonts.display, fontSize: 14 }}>{t("Offline")}</Txt>
           </Glass>
         )}
         <Glass style={{ borderRadius: 999, paddingHorizontal: 16, paddingVertical: 12 }}>
-          <Txt style={{ fontFamily: fonts.display, fontSize: 14 }} tabular>Today {today === null ? "…" : formatNaira(today)}</Txt>
+          <Txt style={{ fontFamily: fonts.display, fontSize: 14 }} tabular>{t("Today")}{" "}{today === null ? "…" : formatNaira(today)}</Txt>
         </Glass>
         <View style={{ flex: 1 }} />
-        <MapButton name="locate" label="Center on me" onPress={() => frame(map.current, [d.position.location], { top: insets.top + 90, bottom: sheetH + 24 })} style={{ position: "relative" }} />
+        <MapButton name="locate" label={t("Center on me")} onPress={() => frame(map.current, [d.position.location], { top: insets.top + 90, bottom: sheetH + 24 })} style={{ position: "relative" }} />
       </View>
 
       {d.trip ? (
         <Pressable accessibilityRole="button" onPress={() => router.push("/driver/trip")}
           style={{ position: "absolute", left: 16, right: 16, top: insets.top + 68, backgroundColor: colors.green, borderRadius: 16, padding: 14, flexDirection: "row", alignItems: "center", gap: 10 }}>
           <Icon name="navigate" color={colors.greenInk} />
-          <Txt variant="bodyStrong" style={{ color: colors.greenInk, flex: 1 }} numberOfLines={1}>Trip with {d.trip.rider.name.split(" ")[0]} in progress</Txt>
+          <Txt variant="bodyStrong" style={{ color: colors.greenInk, flex: 1 }} numberOfLines={1}>{t("Trip with {0} in progress", d.trip.rider.name.split(" ")[0])}</Txt>
           <Icon name="forward" size={18} color={colors.greenInk} />
         </Pressable>
       ) : null}
@@ -127,36 +129,36 @@ export default function Drive() {
             <View style={{ flexDirection: "row", alignItems: "center", gap: 14 }}>
               <Turning />
               <View style={{ flex: 1 }}>
-                <Txt variant="title">Finding riders near you</Txt>
-                <Txt color="muted">Keep the app open. New requests show up here.</Txt>
+                <Txt variant="title">{t("Finding riders near you")}</Txt>
+                <Txt color="muted">{t("Keep the app open. New requests show up here.")}</Txt>
               </View>
             </View>
             <View style={{ flexDirection: "row", gap: 10 }}>
-              <Stat value={String(tripsToday)} label="Trips today" />
-              <Stat value={today === null ? "…" : formatNaira(today)} label="Earned today" />
+              <Stat value={String(tripsToday)} label={t("Trips today")} />
+              <Stat value={today === null ? "…" : formatNaira(today)} label={t("Earned today")} />
             </View>
-            <Button title="Go offline" variant="quiet" icon="power" onPress={d.goOffline} />
+            <Button title={t("Go offline")} variant="quiet" icon="power" onPress={d.goOffline} />
           </>
         ) : (
           <>
             {blockers.length ? (
-              <Banner tone="red" text={`You can't go online: ${blockers.map((b) => `${b.title.toLowerCase()} ${b.reason}`).join(", ")}.`} action="Update now"
+              <Banner tone="red" text={t("You can't go online: {0}.", blockers.map((b) => `${t(b.title).toLowerCase()} ${t(b.reason)}`).join(", "))} action={t("Update now")}
                 onPress={() => router.push({ pathname: "/driver/document/[kind]", params: { kind: blockers[0].kind } })} />
             ) : soon.length ? (
-              <Banner tone="amber" text={`Your ${soon[0].title.toLowerCase()} expires in ${soon[0].days} day${soon[0].days === 1 ? "" : "s"}. Upload the renewed one to keep driving.`} action="Update"
+              <Banner tone="amber" text={t("Your {0} expires in {1} day{2}. Upload the renewed one to keep driving.", t(soon[0].title).toLowerCase(), soon[0].days, soon[0].days === 1 ? "" : "s")} action={t("Update")}
                 onPress={() => router.push({ pathname: "/driver/document/[kind]", params: { kind: soon[0].kind } })} />
             ) : null}
             <GoButton onPress={goOnline} disabled={!!blockers.length} />
             <View style={{ alignItems: "center", gap: 4, marginTop: 4 }}>
-              <Txt variant="title">Sannu, {firstName}. You're offline</Txt>
-              <Txt color="muted" align="center">Tap GO to get {vehicleType === "keke" ? "keke" : "car"} requests near you</Txt>
+              <Txt variant="title">{t("Sannu, {0}. You're offline", firstName)}</Txt>
+              <Txt color="muted" align="center">{vehicleType === "keke" ? t("Tap GO to get keke requests near you") : t("Tap GO to get car requests near you")}</Txt>
             </View>
             <View style={{ flexDirection: "row", gap: 10 }}>
-              <Stat value={String(tripsToday)} label="Trips today" />
-              <Stat value={today === null ? "…" : formatNaira(today)} label="Earned today" />
+              <Stat value={String(tripsToday)} label={t("Trips today")} />
+              <Stat value={today === null ? "…" : formatNaira(today)} label={t("Earned today")} />
             </View>
-            {d.locationStatus === "demo" ? <Txt variant="caption" color="muted">Sample mode: you're outside Sokoto, so Sokoto's places have been moved around you. Requests start a few seconds after you go online.</Txt> : null}
-            {d.locationStatus === "outside" ? <Txt variant="caption" color="muted">You're outside Sokoto. You'll get requests when you're in the service area.</Txt> : null}
+            {d.locationStatus === "demo" ? <Txt variant="caption" color="muted">{t("Sample mode: you're outside Sokoto, so Sokoto's places have been moved around you. Requests start a few seconds after you go online.")}</Txt> : null}
+            {d.locationStatus === "outside" ? <Txt variant="caption" color="muted">{t("You're outside Sokoto. You'll get requests when you're in the service area.")}</Txt> : null}
           </>
         )}
       </Sheet>
@@ -210,7 +212,7 @@ function GoButton({ onPress, disabled }: { onPress: () => void; disabled?: boole
       <Animated.View style={[{ position: "absolute", width: 132, height: 132, borderRadius: 66, backgroundColor: colors.green }, r2]} />
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel="Go online"
+        accessibilityLabel={t("Go online")}
         accessibilityState={{ disabled: !!disabled }}
         disabled={disabled}
         onPress={() => { tap(); onPress(); }}
@@ -218,7 +220,7 @@ function GoButton({ onPress, disabled }: { onPress: () => void; disabled?: boole
       >
         <LinearGradient colors={[colors.heroA, colors.heroB, colors.heroC]} start={{ x: 0.2, y: 0 }} end={{ x: 0.8, y: 1 }} style={{ flex: 1, alignItems: "center", justifyContent: "center", gap: 2 }}>
           <Icon name="power" size={30} color="#FFFFFF" />
-          <Txt style={{ fontFamily: fonts.displayHeavy, fontSize: 24, color: "#FFFFFF", letterSpacing: 1 }}>GO</Txt>
+          <Txt style={{ fontFamily: fonts.displayHeavy, fontSize: 24, color: "#FFFFFF", letterSpacing: 1 }}>{t("GO")}</Txt>
         </LinearGradient>
       </Pressable>
     </View>

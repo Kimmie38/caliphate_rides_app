@@ -14,8 +14,10 @@ import { missingSections } from "../../../src/driver/lib/validate";
 import { useApplication } from "../../../src/driver/store/application";
 import { useSession } from "../../../src/store/session";
 import { useTheme } from "../../../src/theme/ThemeProvider";
+import { t, useI18n } from "../../../src/i18n";
 
 export default function Review() {
+  useI18n();
   const { colors } = useTheme();
   const { application, submit, update } = useApplication();
   const { user } = useSession();
@@ -35,80 +37,82 @@ export default function Review() {
     setBusy(true);
     setError(null);
     try { await submit(signature.trim() || a.personal.fullName); } // the app moves to the application status screen by itself
-    catch (e: any) { setError(e?.message ?? "Couldn't submit. Check your connection and try again."); }
+    catch (e: any) { setError(e?.message ?? t("Couldn't submit. Check your connection and try again.")); }
     finally { setBusy(false); }
   };
 
   const guarantorPhone = normalizeNgPhone(a.guarantor.phone);
 
   return (
-    <StepScreen step={7} title="Check and sign" onBack={() => goBack("/driver/onboarding/bank")}
+    <StepScreen step={7} title={t("Check and sign")} onBack={() => goBack("/driver/onboarding/bank")}
       intro="This becomes your official driver record with Caliphate Rides. Check everything is correct."
       footer={
         <>
           {error ? <Txt variant="caption" style={{ color: colors.danger }}>{error}</Txt> : null}
-          <Button title={a.status === "changes_requested" ? "Send changes for review" : "Submit application"} onPress={send} loading={busy} disabled={!DEMO && (missing.length > 0 || !agreed || !signedOk)} />
+          <Button title={a.status === "changes_requested" ? t("Send changes for review") : t("Submit application")} onPress={send} loading={busy} disabled={!DEMO && (missing.length > 0 || !agreed || !signedOk)} />
         </>
       }>
       {missing.length ? (
         <View style={{ backgroundColor: colors.mist, borderRadius: 14, padding: 14, gap: 6 }}>
-          <Txt variant="bodyStrong">Still to do</Txt>
+          <Txt variant="bodyStrong">{t("Still to do")}</Txt>
           {missing.map((m) => <Txt key={m} color="muted">• {m}</Txt>)}
         </View>
       ) : null}
 
-      <Section title="Vehicle" onEdit={() => router.push("/driver/onboarding")}>
-        <Row k="Type" v={a.vehicleType === "keke" ? "Keke" : a.vehicleType === "car" ? "Car" : "Not chosen"} />
-        <Row k="Owner" v={a.vehicle.ownsVehicle ? "You" : "Someone else: you drive for the owner"} />
+      <Section title={t("Vehicle")} onEdit={() => router.push("/driver/onboarding")}>
+        <Row k="Type" v={a.vehicleType === "keke" ? t("Keke") : a.vehicleType === "car" ? t("Car") : t("Not chosen")} />
+        <Row k="Owner" v={a.vehicle.ownsVehicle ? t("You") : t("Someone else: you drive for the owner")} />
       </Section>
-      <Section title="About you" onEdit={() => router.push("/driver/onboarding/personal")}>
+      <Section title={t("About you")} onEdit={() => router.push("/driver/onboarding/personal")}>
         <Row k="Name" v={a.personal.fullName} />
         <Row k="Phone" v={user ? formatNgPhone(user.phone) : ""} />
         <Row k="Date of birth" v={prettyDate(a.personal.dateOfBirth)} />
         <Row k="LGA" v={a.personal.lga} />
         <Row k="NIN" v={a.personal.nin ? `••••••${a.personal.nin.slice(-5)}` : ""} />
       </Section>
-      <Section title="Vehicle details" onEdit={() => router.push("/driver/onboarding/vehicle")}>
+      <Section title={t("Vehicle details")} onEdit={() => router.push("/driver/onboarding/vehicle")}>
         <Row k="Vehicle" v={[a.vehicle.colour, a.vehicle.make, a.vehicle.model, a.vehicle.year && `(${a.vehicle.year})`].filter(Boolean).join(" ")} />
         <Row k="Plate" v={a.vehicle.plate} />
       </Section>
       {!a.vehicle.ownsVehicle ? (
-        <Section title="Vehicle owner" onEdit={() => router.push("/driver/onboarding/vehicle")}>
+        <Section title={t("Vehicle owner")} onEdit={() => router.push("/driver/onboarding/vehicle")}>
           <Row k="Name" v={a.owner?.fullName ?? ""} />
           <Row k="Phone" v={normalizeNgPhone(a.owner?.phone ?? "") ? formatNgPhone(normalizeNgPhone(a.owner!.phone)!) : a.owner?.phone ?? ""} />
           <Row k="Email" v={a.owner?.email ?? ""} />
           <Row k="Address" v={a.owner?.address ?? ""} />
         </Section>
       ) : null}
-      <Section title="Documents" onEdit={() => router.push("/driver/onboarding/documents")}>
+      <Section title={t("Documents")} onEdit={() => router.push("/driver/onboarding/documents")}>
         {docs.map((d) => {
           const cur = a.documents[d.kind]?.current;
-          return <Row key={d.kind} k={d.title} v={[cur?.variant, cur?.expiry ? `Expires ${prettyDate(cur.expiry)}` : "Added"].filter(Boolean).join(" · ")} />;
+          return <Row key={d.kind} k={t(d.title)} v={[cur?.variant ? t(cur.variant) : "", cur?.expiry ? t("Expires {0}", prettyDate(cur.expiry)) : t("Added")].filter(Boolean).join(" · ")} />;
         })}
       </Section>
-      <Section title="Guarantor" onEdit={() => router.push("/driver/onboarding/guarantor")}>
+      <Section title={t("Guarantor")} onEdit={() => router.push("/driver/onboarding/guarantor")}>
         <Row k="Name" v={a.guarantor.fullName} />
         <Row k="Phone" v={guarantorPhone ? formatNgPhone(guarantorPhone) : a.guarantor.phone} />
-        <Row k="Relationship" v={a.guarantor.relationship} />
+        <Row k="Relationship" v={t(a.guarantor.relationship)} />
       </Section>
-      <Section title="Bank account" onEdit={() => router.push("/driver/onboarding/bank")}>
+      <Section title={t("Bank account")} onEdit={() => router.push("/driver/onboarding/bank")}>
         <Row k="Bank" v={a.bank.bankName} />
         <Row k="Account" v={`${a.bank.accountNumber} · ${a.bank.accountName}`} />
       </Section>
 
       <View style={{ gap: 12, backgroundColor: colors.mist, borderRadius: 18, padding: 16 }}>
-        <Txt variant="heading">Declaration</Txt>
+        <Txt variant="heading">{t("Declaration")}</Txt>
         <Txt color="muted">
-          I confirm that the information and documents I've given are true{a.vehicle.ownsVehicle ? " and belong to me" : ", and that the vehicle's owner has allowed me to drive it for Caliphate Rides"}. I understand that Caliphate Rides keeps them as my official driver record, checks them with the issuing bodies, and may contact my guarantor{a.vehicle.ownsVehicle ? "" : " and the vehicle's owner"}. I will keep my licence and vehicle papers valid and update them before they expire.
+          {a.vehicle.ownsVehicle
+            ? t("I confirm that the information and documents I've given are true and belong to me. I understand that Caliphate Rides keeps them as my official driver record, checks them with the issuing bodies, and may contact my guarantor. I will keep my licence and vehicle papers valid and update them before they expire.")
+            : t("I confirm that the information and documents I've given are true, and that the vehicle's owner has allowed me to drive it for Caliphate Rides. I understand that Caliphate Rides keeps them as my official driver record, checks them with the issuing bodies, and may contact my guarantor and the vehicle's owner. I will keep my licence and vehicle papers valid and update them before they expire.")}
         </Txt>
         <Pressable accessibilityRole="checkbox" accessibilityState={{ checked: agreed }} onPress={() => { tap(); setAgreed(!agreed); }} style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
           <View style={{ width: 26, height: 26, borderRadius: 8, borderWidth: 2, borderColor: agreed ? colors.green : colors.line, backgroundColor: agreed ? colors.green : "transparent", alignItems: "center", justifyContent: "center" }}>
             {agreed ? <Icon name="check" size={18} color={colors.greenInk} /> : null}
           </View>
-          <Txt variant="bodyStrong" style={{ flex: 1 }}>I agree</Txt>
+          <Txt variant="bodyStrong" style={{ flex: 1 }}>{t("I agree")}</Txt>
         </Pressable>
-        <Field label="Type your full name to sign" value={signature} onChangeText={setSignature} autoCapitalize="words" placeholder={a.personal.fullName || "Full name"}
-          error={signature && !signedOk ? "Type your name exactly as above." : undefined} />
+        <Field label={t("Type your full name to sign")} value={signature} onChangeText={setSignature} autoCapitalize="words" placeholder={a.personal.fullName || t("Full name")}
+          error={signature && !signedOk ? t("Type your name exactly as above.") : undefined} />
       </View>
     </StepScreen>
   );
@@ -120,8 +124,8 @@ function Section({ title, onEdit, children }: { title: string; onEdit: () => voi
     <View style={{ borderWidth: 1.5, borderColor: colors.line, borderRadius: 16, padding: 14, gap: 8 }}>
       <View style={{ flexDirection: "row", alignItems: "center" }}>
         <Txt variant="heading" style={{ flex: 1 }}>{title}</Txt>
-        <Pressable accessibilityRole="button" accessibilityLabel={`Edit ${title}`} onPress={() => { tap(); onEdit(); }} hitSlop={8}>
-          <Txt variant="label" color="greenText">Edit</Txt>
+        <Pressable accessibilityRole="button" accessibilityLabel={t("Edit {0}", title)} onPress={() => { tap(); onEdit(); }} hitSlop={8}>
+          <Txt variant="label" color="greenText">{t("Edit")}</Txt>
         </Pressable>
       </View>
       {children}
@@ -132,7 +136,7 @@ function Section({ title, onEdit, children }: { title: string; onEdit: () => voi
 function Row({ k, v }: { k: string; v: string }) {
   return (
     <View style={{ flexDirection: "row", gap: 12 }}>
-      <Txt variant="caption" color="muted" style={{ width: 110 }}>{k}</Txt>
+      <Txt variant="caption" color="muted" style={{ width: 110 }}>{t(k)}</Txt>
       <Txt variant="caption" style={{ flex: 1 }}>{v || "—"}</Txt>
     </View>
   );

@@ -8,6 +8,7 @@ import { isInApp, paymentOption } from "../../lib/payments";
 import { fareBreakdown, formatNaira } from "../../lib/pricing";
 import { fonts } from "../../theme/tokens";
 import type { RideRequest } from "../types";
+import { t } from "../../i18n";
 
 /** A new ride request: what the trip pays, how the rider pays, and how far the pickup is. */
 export function RequestCard({ request, from, onAccept, onDecline, accepting }: {
@@ -31,7 +32,7 @@ export function RequestCard({ request, from, onAccept, onDecline, accepting }: {
       <View style={{ flexDirection: "row", alignItems: "center", gap: 14 }}>
         <Ring value={left / total} size={60} label={String(Math.ceil(left / 1000))} />
         <View style={{ flex: 1 }}>
-          <Txt variant="title">New {request.rideType === "keke" ? "keke" : "car"} request</Txt>
+          <Txt variant="title">{request.rideType === "keke" ? t("New keke request") : t("New car request")}</Txt>
           <Txt variant="caption" color="muted" style={{ fontFamily: fonts.bodySemi }}>{request.rider.name.split(" ")[0]} · ★ {request.rider.rating.toFixed(1)}</Txt>
         </View>
       </View>
@@ -39,19 +40,17 @@ export function RequestCard({ request, from, onAccept, onDecline, accepting }: {
       <View style={{ flexDirection: "row", alignItems: "flex-end", gap: 12 }}>
         <View style={{ flex: 1 }}>
           <Txt style={{ fontFamily: fonts.displayHeavy, fontSize: 42, lineHeight: 46, letterSpacing: -1.4 }} tabular>{formatNaira(request.fare)}</Txt>
-          <Txt variant="caption" color="muted" tabular style={{ fontFamily: fonts.bodySemi }}>{fareBreakdown(request)} · about {request.durationMin} min</Txt>
-          <Txt variant="caption" color="greenText" tabular style={{ fontFamily: fonts.bodyBold, marginTop: 2 }}>
-            You get {formatNaira(request.driverEarning)} after {request.commissionPercent}% commission
-          </Txt>
+          <Txt variant="caption" color="muted" tabular style={{ fontFamily: fonts.bodySemi }}>{t("{0} · about {1} min", fareBreakdown(request), request.durationMin)}</Txt>
+          <Txt variant="caption" color="greenText" tabular style={{ fontFamily: fonts.bodyBold, marginTop: 2 }}>{t("You get {0} after {1}% commission", formatNaira(request.driverEarning), request.commissionPercent)}</Txt>
         </View>
-        <Tag text={inApp ? `Paid in app · ${pay.label}` : pay.id === "cash" ? "Collect cash" : "Transfer to you"} tone={inApp ? "green" : "amber"} icon={pay.icon} />
+        <Tag text={inApp ? t("Paid in app · {0}", pay.label) : pay.id === "cash" ? t("Collect cash") : t("Transfer to you")} tone={inApp ? "green" : "amber"} icon={pay.icon} />
       </View>
 
-      <RouteSummary from={request.pickup.name} fromDetail={`${pickupKm.toFixed(1)} km from you · ${pickupMin} min`} to={request.destination.name} toDetail={request.destination.subtitle} />
+      <RouteSummary from={request.pickup.name} fromDetail={t("{0} km from you · {1} min", pickupKm.toFixed(1), pickupMin)} to={request.destination.name} toDetail={request.destination.subtitle} />
 
       <View style={{ flexDirection: "row", gap: 10 }}>
-        <Button title="Decline" variant="quiet" onPress={onDecline} style={{ flex: 1 }} />
-        <Button title="Accept" onPress={onAccept} loading={accepting} style={{ flex: 2 }} />
+        <Button title={t("Decline")} variant="quiet" onPress={onDecline} style={{ flex: 1 }} />
+        <Button title={t("Accept")} onPress={onAccept} loading={accepting} style={{ flex: 2 }} />
       </View>
     </View>
   );

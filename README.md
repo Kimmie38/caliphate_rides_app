@@ -16,7 +16,7 @@ The app remembers the choice on the phone. Switching is blocked during an active
 
 Rider screens are in `app/(tabs)` and `app/ride`. Driver screens are in `app/driver`; their record and driving state only load in driver mode. The rules for which screens are open are in `app/_layout.tsx` (signed in, named, ride or drive) and `app/driver/_layout.tsx` (sign-up, review, approved).
 
-Built on **Expo SDK 57** (React Native 0.86, React 19.2, TypeScript 6).
+Built on **Expo SDK 58** (React Native 0.88, React 19.3, TypeScript 6).
 
 ## Run it on your phone
 
@@ -24,7 +24,7 @@ Built on **Expo SDK 57** (React Native 0.86, React 19.2, TypeScript 6).
 2. In this folder:
    ```bash
    npm install
-   npx expo install --fix        # confirms every package matches SDK 57
+   npx expo install --fix        # confirms every package matches SDK 58
    npx expo-doctor@latest        # checks the project for problems
    cp .env.example .env
    npx expo start
@@ -43,6 +43,20 @@ npm run build:ios        # needs a Mac with Xcode 26.4+
 Or build in the cloud without Android Studio or Xcode: `npx eas-cli@latest build --profile development --platform android`.
 
 The app starts in **sample mode** (`EXPO_PUBLIC_USE_MOCK=true`). Any 6-digit code signs you in, a sample driver accepts your ride, drives to you, and then drives the trip, so you can see the whole flow without a server. If you're outside Sokoto, sample mode moves Sokoto's places around you (see below).
+
+## English and Hausa
+
+Everyone can switch between English and Hausa: on the welcome screen (before signing in), and in **Account → Settings** for riders and drivers. The choice is saved on the phone and on the person's account, so it stays after the app is closed and follows them to a new phone.
+
+- Text is written in English in the code inside `t()`: `t("Book a ride")`, or with values `t("Pay {0} to {1}", amount, name)`.
+- The Hausa is in `src/i18n/ha.ts`, keyed by the English. Anything missing there shows in English.
+- New screen? Wrap its text in `t()`, call `useI18n()` at the top of the screen (so it redraws when the language changes), and add the Hausa to `ha.ts`.
+- Messages that come from the server (some errors, balance activity labels) stay in English for now.
+
+## Profile and settings
+
+- **Profile** (tap your name in Account): riders change their name and email; drivers change their email, and see their official details (name from the licence, vehicle, bank, guarantor) which only support can change. The phone number is how people sign in, so it's shown but locked.
+- **Settings**: language, appearance (light, dark, match phone), support and app version.
 
 ## How fares work
 

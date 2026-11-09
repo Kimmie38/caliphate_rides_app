@@ -11,15 +11,17 @@ import { requestOtp, verifyOtp } from "../../src/services/auth";
 import { useSession } from "../../src/store/session";
 import { useTheme } from "../../src/theme/ThemeProvider";
 import { fonts } from "../../src/theme/tokens";
+import { t, useI18n } from "../../src/i18n";
 
 const LEN = 6;
 
 export default function Verify() {
+  useI18n();
   const { phone } = useLocalSearchParams<{ phone: string }>();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const { signIn } = useSession();
-  const input = useRef<TextInput>(null);
+  const input = useRef<React.ComponentRef<typeof TextInput>>(null);
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -41,7 +43,7 @@ export default function Verify() {
       // Signing in opens the next screen automatically (name screen for new riders, otherwise home).
       await signIn(r.token, r.user);
     } catch (e: any) {
-      setError(e?.message ?? "That code didn't work. Check the SMS and try again.");
+      setError(e?.message ?? t("That code didn't work. Check the SMS and try again."));
       setCode("");
     } finally {
       setLoading(false);
@@ -51,17 +53,17 @@ export default function Verify() {
   const resend = async () => {
     setSeconds(60);
     setError(null);
-    try { await requestOtp(phone); } catch (e: any) { setError(e?.message ?? "Couldn't resend the code."); }
+    try { await requestOtp(phone); } catch (e: any) { setError(e?.message ?? t("Couldn't resend the code.")); }
   };
 
   return (
     <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1, backgroundColor: colors.paper }}>
       <View style={{ flex: 1, paddingHorizontal: 24, paddingTop: insets.top + 16, paddingBottom: insets.bottom + 24, gap: 14 }}>
-        <IconButton name="back" label="Back" onPress={() => goBack("/(auth)/welcome")} size={44} style={{ borderRadius: 14 }} />
-        <Txt variant="hero" style={{ marginTop: 8 }}>Enter the code</Txt>
-        <Txt color="muted">Sent to {phone ? formatNgPhone(phone) : "your phone"}</Txt>
+        <IconButton name="back" label={t("Back")} onPress={() => goBack("/(auth)/welcome")} size={44} style={{ borderRadius: 14 }} />
+        <Txt variant="hero" style={{ marginTop: 8 }}>{t("Enter the code")}</Txt>
+        <Txt color="muted">{t("Sent to {0}", phone ? formatNgPhone(phone) : t("your phone"))}</Txt>
 
-        <Pressable onPress={() => input.current?.focus()} accessibilityLabel="Verification code" style={{ flexDirection: "row", gap: 8, marginTop: 8 }}>
+        <Pressable onPress={() => input.current?.focus()} accessibilityLabel={t("Verification code")} style={{ flexDirection: "row", gap: 8, marginTop: 8 }}>
           {Array.from({ length: LEN }).map((_, i) => {
             const active = i === Math.min(code.length, LEN - 1);
             return (
@@ -91,14 +93,14 @@ export default function Verify() {
 
         {error ? <Txt variant="caption" style={{ color: colors.danger }}>{error}</Txt> : null}
         {seconds > 0 ? (
-          <Txt variant="caption" color="muted" tabular>Resend code in 0:{String(seconds).padStart(2, "0")}</Txt>
+          <Txt variant="caption" color="muted" tabular>{t("Resend code in 0:{0}", String(seconds).padStart(2, "0"))}</Txt>
         ) : (
-          <Pressable onPress={resend} accessibilityRole="button"><Txt variant="label" color="greenText">Resend code</Txt></Pressable>
+          <Pressable onPress={resend} accessibilityRole="button"><Txt variant="label" color="greenText">{t("Resend code")}</Txt></Pressable>
         )}
-        {ENV.useMock ? <Txt variant="caption" color="muted">Sample mode: any 6 digits work.</Txt> : null}
+        {ENV.useMock ? <Txt variant="caption" color="muted">{t("Sample mode: any 6 digits work.")}</Txt> : null}
 
         <View style={{ flex: 1 }} />
-        <Button title="Verify" onPress={() => verify()} loading={loading} disabled={!DEMO && code.length !== LEN} />
+        <Button title={t("Verify")} onPress={() => verify()} loading={loading} disabled={!DEMO && code.length !== LEN} />
       </View>
     </KeyboardAvoidingView>
   );

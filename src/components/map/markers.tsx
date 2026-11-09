@@ -9,6 +9,7 @@ import { CarIcon, KekeIcon } from "../Icon";
 import { KnotMark } from "../Knot";
 import { MLRN } from "./engine";
 import { useWebOverlay } from "./overlays";
+import { t } from "../../i18n";
 
 // Each marker works with both map engines: in the web engine (Expo Go) it registers itself with
 // the web map, which draws the same design; in the native engine it renders a MapLibre marker.
@@ -21,7 +22,7 @@ export function UserDot({ coordinate }: { coordinate: LatLng }) {
   const { Marker } = MLRN!;
   return (
     <Marker id="you" lngLat={at(coordinate)} anchor="center">
-      <View accessibilityLabel="Your location" style={{ width: 54, height: 54, alignItems: "center", justifyContent: "center" }}>
+      <View accessibilityLabel={t("Your location")} style={{ width: 54, height: 54, alignItems: "center", justifyContent: "center" }}>
         <View style={{ position: "absolute", width: 54, height: 54, borderRadius: 27, backgroundColor: colors.green, opacity: 0.16 }} />
         <View style={{ width: 22, height: 22, borderRadius: 11, backgroundColor: colors.green, borderWidth: 4, borderColor: colors.paper }} />
       </View>
@@ -46,7 +47,7 @@ export function PickupPin({ coordinate, label }: { coordinate: LatLng; label?: s
   const { Marker } = MLRN!;
   return (
     <Marker id="pickup" lngLat={at(coordinate)} anchor="bottom">
-      <View accessibilityLabel={label ? `Pickup, ${label}` : "Pickup"} style={{ alignItems: "center" }}>
+      <View accessibilityLabel={label ? t("Pickup, {0}", label) : t("Pickup")} style={{ alignItems: "center" }}>
         <PinLabel text={label} />
         <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: colors.green, alignItems: "center", justifyContent: "center", borderWidth: 2, borderColor: colors.paper }}>
           <KnotMark size={24} color={colors.greenInk} strokeWidth={10} />
@@ -63,7 +64,7 @@ export function DropPin({ coordinate, label }: { coordinate: LatLng; label?: str
   const { Marker } = MLRN!;
   return (
     <Marker id="destination" lngLat={at(coordinate)} anchor="bottom">
-      <View accessibilityLabel={label ? `Destination, ${label}` : "Destination"} style={{ alignItems: "center" }}>
+      <View accessibilityLabel={label ? t("Destination, {0}", label) : t("Destination")} style={{ alignItems: "center" }}>
         <PinLabel text={label} />
         <View style={{ width: 34, height: 34, borderRadius: 10, backgroundColor: colors.ink, alignItems: "center", justifyContent: "center" }}>
           <View style={{ width: 10, height: 10, borderRadius: 2, backgroundColor: colors.paper }} />
@@ -82,7 +83,7 @@ export function DriverMarker({ coordinate, heading, rideType }: { coordinate: La
   const Glyph = rideType === "keke" ? KekeIcon : CarIcon;
   return (
     <Marker id="driver" lngLat={at(coordinate)} anchor="center">
-      <View accessibilityLabel="Your driver" style={{ width: 58, height: 58, alignItems: "center", justifyContent: "center" }}>
+      <View accessibilityLabel={t("Your driver")} style={{ width: 58, height: 58, alignItems: "center", justifyContent: "center" }}>
         <View style={{ position: "absolute", width: 58, height: 58, alignItems: "center", transform: [{ rotate: `${heading}deg` }] }}>
           <View style={{ width: 0, height: 0, borderLeftWidth: 6, borderRightWidth: 6, borderBottomWidth: 8, borderLeftColor: "transparent", borderRightColor: "transparent", borderBottomColor: colors.green }} />
         </View>

@@ -21,6 +21,7 @@ import { paymentOption } from "../../src/lib/payments";
 import { formatNaira } from "../../src/lib/pricing";
 import { useRide } from "../../src/store/ride";
 import { useTheme } from "../../src/theme/ThemeProvider";
+import { t, useI18n } from "../../src/i18n";
 
 const KMH = { keke: 20, car: 26 } as const;
 const ROAD_FACTOR = 1.3; // straight line → road distance, for ETAs between GPS updates
@@ -29,6 +30,7 @@ const ROAD_FACTOR = 1.3; // straight line → road distance, for ETAs between GP
 const PEEK = 230;
 
 export default function Track() {
+  useI18n();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const { activeRide: ride, driverPosition, online, cancelActiveRide } = useRide();
@@ -63,7 +65,7 @@ export default function Track() {
     frame(map.current, pts, { top: insets.top + 80, bottom: sheetH + 24 });
   }, [status, hasDriver, sheetH, live.version]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  if (!ride) return <Missing message="You don't have a ride in progress." />;
+  if (!ride) return <Missing message={t("You don't have a ride in progress.")} />;
 
   const driver = ride.driver;
   const kind = ride.rideType === "keke" ? "keke" : "car";
@@ -79,20 +81,22 @@ export default function Track() {
   const arriveBy = etaMin ? new Date(Date.now() + etaMin * 60000).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }) : "";
 
   const shareTrip = () =>
-    Share.share({ message: `I'm on a ${BRAND.name} trip to ${ride.destination.name}${driver ? ` with ${driver.name} (${driver.vehicle.plate})` : ""}. Follow it live: ${ENV.shareBaseUrl}/${ride.id}` });
+    Share.share({ message: driver
+      ? t("I'm on a {0} trip to {1} with {2} ({3}). Follow it live: {4}/{5}", BRAND.name, ride.destination.name, driver.name, driver.vehicle.plate, ENV.shareBaseUrl, ride.id)
+      : t("I'm on a {0} trip to {1}. Follow it live: {2}/{3}", BRAND.name, ride.destination.name, ENV.shareBaseUrl, ride.id) });
   const safety = () =>
-    Alert.alert("Safety", "If you're in danger, call 112 now.", [
-      { text: "Call 112", style: "destructive", onPress: () => Linking.openURL("tel:112") },
-      { text: "Share trip with family", onPress: shareTrip },
-      { text: "Close", style: "cancel" },
+    Alert.alert(t("Safety"), t("If you're in danger, call 112 now."), [
+      { text: t("Call 112"), style: "destructive", onPress: () => Linking.openURL("tel:112") },
+      { text: t("Share trip with family"), onPress: shareTrip },
+      { text: t("Close"), style: "cancel" },
     ]);
   const cancel = () =>
-    Alert.alert("Cancel this ride?", status === "searching" ? "We'll stop looking for a driver." : "Your driver is already on the way.", [
-      { text: "Keep ride", style: "cancel" },
-      { text: "Cancel ride", style: "destructive", onPress: async () => {
+    Alert.alert(t("Cancel this ride?"), status === "searching" ? t("We'll stop looking for a driver.") : t("Your driver is already on the way."), [
+      { text: t("Keep ride"), style: "cancel" },
+      { text: t("Cancel ride"), style: "destructive", onPress: async () => {
         setCancelling(true);
         try { await cancelActiveRide(); router.replace("/(tabs)"); }
-        catch (e: any) { Alert.alert("Couldn't cancel", e?.message ?? "Try again."); }
+        catch (e: any) { Alert.alert(t("Couldn't cancel"), e?.message ?? t("Try again.")); }
         finally { setCancelling(false); }
       } },
     ]);
@@ -101,36 +105,36 @@ export default function Track() {
     <View style={{ flex: 1, backgroundColor: colors.paper }}>
       <RideMap ref={map} center={ride.pickup.location}>
         <RouteLine path={moving ? live.path : []} />
-        {status !== "in_progress" && <PickupPin coordinate={ride.pickup.location} label={status === "accepted" && etaMin ? `${etaMin} min` : undefined} />}
+        {status !== "in_progress" && <PickupPin coordinate={ride.pickup.location} label={status === "accepted" && etaMin ? t("{0} min", etaMin) : undefined} />}
         {status === "in_progress" && <DropPin coordinate={ride.destination.location} label={arriveBy || undefined} />}
         {car && status !== "searching" && <DriverMarker coordinate={car} heading={carHeading} rideType={ride.rideType} />}
       </RideMap>
       <View style={{ position: "absolute", top: insets.top + 10, left: 16, right: 16, flexDirection: "row", alignItems: "center", gap: 10 }}>
-        <MapButton name="back" label="Back to home" onPress={() => router.navigate("/(tabs)")} style={{ position: "relative" }} />
+        <MapButton name="back" label={t("Back to home")} onPress={() => router.navigate("/(tabs)")} style={{ position: "relative" }} />
         {driver && status !== "searching" ? (
           <Glass style={{ borderRadius: 999, paddingVertical: 11, paddingHorizontal: 16, flexDirection: "row", alignItems: "center", gap: 10, flexShrink: 1 }}>
             <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: colors.green, borderWidth: 3, borderColor: colors.greenSoft }} />
             <Txt style={{ fontFamily: fonts.display, fontSize: 13 }} numberOfLines={1}>
-              {status === "arrived" ? `${driver.name.split(" ")[0]} is at your pickup` : status === "in_progress" ? "On your way" : `${driver.name.split(" ")[0]} is on the way`}
+              {status === "arrived" ? t("{0} is at your pickup", driver.name.split(" ")[0]) : status === "in_progress" ? t("On your way") : t("{0} is on the way", driver.name.split(" ")[0])}
             </Txt>
           </Glass>
         ) : null}
       </View>
 
       <Sheet onHeight={setSheetH} scroll peek={PEEK}>
-        {!online ? <Txt variant="caption" style={{ color: colors.danger }}>Reconnecting… your driver's position will update when you're back online.</Txt> : null}
+        {!online ? <Txt variant="caption" style={{ color: colors.danger }}>{t("Reconnecting… your driver's position will update when you're back online.")}</Txt> : null}
 
         {status === "searching" && (
           <>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 14 }}>
               <Spinner />
               <View style={{ flex: 1 }}>
-                <Txt variant="title">Finding a {kind} near you</Txt>
-                <Txt color="muted">Drivers near {ride.pickup.subtitle?.replace(/^Near /, "") ?? ride.pickup.name} can see your request.</Txt>
+                <Txt variant="title">{t("Finding a {0} near you", kind)}</Txt>
+                <Txt color="muted">{t("Drivers near {0} can see your request.", ride.pickup.subtitle?.replace(/^Near /, "") ?? ride.pickup.name)}</Txt>
               </View>
             </View>
             <RouteSummary from={ride.pickup.name} to={ride.destination.name} />
-            <Button title="Cancel request" variant="danger" onPress={cancel} loading={cancelling} />
+            <Button title={t("Cancel request")} variant="danger" onPress={cancel} loading={cancelling} />
           </>
         )}
 
@@ -140,17 +144,17 @@ export default function Track() {
               <View style={{ flex: 1 }}>
                 {status === "arrived" ? (
                   <>
-                    <Txt variant="eta">Here</Txt>
-                    <Txt color="muted">{driver.name.split(" ")[0]} is waiting at the pickup. Look for {driver.vehicle.plate}.</Txt>
+                    <Txt variant="eta">{t("Here")}</Txt>
+                    <Txt color="muted">{t("{0} is waiting at the pickup. Look for {1}.", driver.name.split(" ")[0], driver.vehicle.plate)}</Txt>
                   </>
                 ) : (
                   <>
                     <View style={{ flexDirection: "row", alignItems: "baseline", gap: 8 }}>
                       <Txt variant="eta" tabular>{etaMin ?? "–"}</Txt>
-                      <Txt variant="button" color="muted" style={{ fontSize: 18 }}>{status === "in_progress" ? "min to go" : "min away"}</Txt>
+                      <Txt variant="button" color="muted" style={{ fontSize: 18 }}>{status === "in_progress" ? t("min to go") : t("min away")}</Txt>
                     </View>
                     <Txt color="muted">
-                      {status === "in_progress" ? `Heading to ${ride.destination.name}${arriveBy ? ` · arrive by ${arriveBy}` : ""}` : `${driver.name.split(" ")[0]} is on the way to your pickup`}
+                      {status === "in_progress" ? (arriveBy ? t("Heading to {0} · arrive by {1}", ride.destination.name, arriveBy) : t("Heading to {0}", ride.destination.name)) : t("{0} is on the way to your pickup", driver.name.split(" ")[0])}
                     </Txt>
                   </>
                 )}
@@ -158,7 +162,7 @@ export default function Track() {
               <Plate text={driver.vehicle.plate} />
             </View>
             {/* Trip stages: accepted · on the way · arrived · on trip */}
-            <View style={{ flexDirection: "row", gap: 6 }} accessibilityLabel={`Progress: ${status === "in_progress" ? "on the trip" : status === "arrived" ? "driver arrived" : "driver on the way"}`}>
+            <View style={{ flexDirection: "row", gap: 6 }} accessibilityLabel={t("Progress: {0}", status === "in_progress" ? "on the trip" : status === "arrived" ? "driver arrived" : "driver on the way")}>
               {[0, 1, 2, 3].map((i) => {
                 const stage = status === "accepted" ? 1 : status === "arrived" ? 2 : 3;
                 const part = i < stage ? 1 : i === stage ? (status === "arrived" ? 0 : progress) : 0;
@@ -187,10 +191,10 @@ export default function Track() {
 
             <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
               {[
-                { icon: "phone" as const, label: "Call", onPress: () => Linking.openURL(`tel:${driver.phone}`) },
-                { icon: "chat" as const, label: "Message", onPress: () => Linking.openURL(`sms:${driver.phone}`) },
-                { icon: "share" as const, label: "Share trip", onPress: shareTrip },
-                { icon: "shield" as const, label: "Safety", onPress: safety, danger: true },
+                { icon: "phone" as const, label: t("Call"), onPress: () => Linking.openURL(`tel:${driver.phone}`) },
+                { icon: "chat" as const, label: t("Message"), onPress: () => Linking.openURL(`sms:${driver.phone}`) },
+                { icon: "share" as const, label: t("Share trip"), onPress: shareTrip },
+                { icon: "shield" as const, label: t("Safety"), onPress: safety, danger: true },
               ].map((a) => (
                 <View key={a.label} style={{ alignItems: "center", gap: 6, flex: 1 }}>
                   <IconButton name={a.icon} label={a.label} size={54} onPress={a.onPress} tone={a.danger ? "danger" : undefined} />
@@ -198,16 +202,16 @@ export default function Track() {
                 </View>
               ))}
             </View>
-            {status !== "in_progress" && <Button title="Cancel ride" variant="quiet" onPress={cancel} loading={cancelling} />}
+            {status !== "in_progress" && <Button title={t("Cancel ride")} variant="quiet" onPress={cancel} loading={cancelling} />}
           </>
         )}
 
         {(status === "no_drivers" || status === "cancelled") && (
           <>
-            <Txt variant="title">{status === "no_drivers" ? "No drivers free right now" : "Your driver cancelled"}</Txt>
-            <Txt color="muted">{status === "no_drivers" ? "All nearby drivers are busy. Try again in a few minutes, or switch between Keke and Car." : "Sorry about that. You haven't been charged. Request again and we'll find another driver."}</Txt>
-            <Button title="Try again" onPress={() => router.replace("/ride/confirm")} />
-            <Button title="Back to home" variant="quiet" onPress={() => router.replace("/(tabs)")} />
+            <Txt variant="title">{status === "no_drivers" ? t("No drivers free right now") : t("Your driver cancelled")}</Txt>
+            <Txt color="muted">{status === "no_drivers" ? t("All nearby drivers are busy. Try again in a few minutes, or switch between Keke and Car.") : t("Sorry about that. You haven't been charged. Request again and we'll find another driver.")}</Txt>
+            <Button title={t("Try again")} onPress={() => router.replace("/ride/confirm")} />
+            <Button title={t("Back to home")} variant="quiet" onPress={() => router.replace("/(tabs)")} />
           </>
         )}
       </Sheet>

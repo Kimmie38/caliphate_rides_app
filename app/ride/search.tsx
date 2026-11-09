@@ -14,10 +14,12 @@ import { useSavedPlaces, type SavedKey } from "../../src/store/saved";
 import { useTheme } from "../../src/theme/ThemeProvider";
 import { fonts, shadow } from "../../src/theme/tokens";
 import type { Place } from "../../src/types";
+import { t, useI18n } from "../../src/i18n";
 
 type Field = "pickup" | "destination";
 
 export default function Search() {
+  useI18n();
   const { saveAs } = useLocalSearchParams<{ saveAs?: SavedKey }>();
   const { colors, isDark } = useTheme();
   const insets = useSafeAreaInsets();
@@ -27,7 +29,7 @@ export default function Search() {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<Place[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const inputRef = useRef<TextInput>(null);
+  const inputRef = useRef<React.ComponentRef<typeof TextInput>>(null);
   const near = pickup?.location ?? serviceCenter();
 
   useEffect(() => {
@@ -51,18 +53,18 @@ export default function Search() {
       setDestination(p);
       router.dismissTo("/ride/confirm"); // back to an open confirm screen, or replaces this one
     } catch (e: any) {
-      setError(e?.message ?? "Couldn't use that place. Try another.");
+      setError(e?.message ?? t("Couldn't use that place. Try another."));
     }
   };
 
-  const title = saveAs ? `Set ${saveAs === "home" ? "Home" : "Work"}` : "Plan your ride";
+  const title = saveAs ? t("Set {0}", saveAs === "home" ? "Home" : "Work") : t("Plan your ride");
   const savedRows = !saveAs && !query ? (["home", "work"] as const).filter((k) => saved[k]).map((k) => saved[k]!) : [];
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.canvas, paddingTop: insets.top + 12 }}>
       <View style={{ paddingHorizontal: 20, gap: 14 }}>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-          <IconButton name="back" label="Back" onPress={() => goBack("/")} size={44} />
+          <IconButton name="back" label={t("Back")} onPress={() => goBack("/")} size={44} />
           <Txt variant="title" style={{ fontSize: 24 }}>{title}</Txt>
         </View>
 
@@ -72,7 +74,7 @@ export default function Search() {
               <FieldRow
                 marker={<View style={{ width: 14, height: 14, borderRadius: 7, backgroundColor: colors.green, borderWidth: 3, borderColor: colors.greenSoft }} />}
                 active={field === "pickup"}
-                placeholder="Pickup"
+                placeholder={t("Pickup")}
                 value={field === "pickup" ? query : pickup?.name ?? ""}
                 detail={field === "pickup" ? undefined : pickup?.subtitle}
                 onFocus={() => { setField("pickup"); setQuery(""); }}
@@ -86,7 +88,7 @@ export default function Search() {
             autoFocus
             marker={<View style={{ width: 11, height: 11, borderRadius: 3, backgroundColor: colors.ink }} />}
             active={field === "destination"}
-            placeholder={saveAs ? "Search for an address or place" : "Where to?"}
+            placeholder={saveAs ? t("Search for an address or place") : t("Where to?")}
             value={field === "destination" ? query : ""}
             onFocus={() => { setField("destination"); setQuery(""); }}
             onChangeText={setQuery}
@@ -102,8 +104,8 @@ export default function Search() {
             <Icon name="map" size={20} color={colors.greenText} />
           </View>
           <View style={{ flex: 1 }}>
-            <Txt variant="bodyStrong" color="greenText">Choose on map</Txt>
-            <Txt variant="caption" color="greenText" style={{ opacity: 0.8 }}>For a house or spot without an address</Txt>
+            <Txt variant="bodyStrong" color="greenText">{t("Choose on map")}</Txt>
+            <Txt variant="caption" color="greenText" style={{ opacity: 0.8 }}>{t("For a house or spot without an address")}</Txt>
           </View>
           <Icon name="forward" size={18} color={colors.greenText} />
         </Pressable>
@@ -116,8 +118,8 @@ export default function Search() {
         keyboardShouldPersistTaps="handled"
         data={[...savedRows, ...results]}
         keyExtractor={(p) => p.id}
-        ListHeaderComponent={<Txt variant="heading" style={{ paddingVertical: 8 }}>{query ? "Results" : "Popular places"}</Txt>}
-        ListEmptyComponent={query ? <Txt color="muted" style={{ paddingVertical: 12 }}>No place called "{query}" yet. Try a market, hospital or school, or choose on the map.</Txt> : null}
+        ListHeaderComponent={<Txt variant="heading" style={{ paddingVertical: 8 }}>{query ? t("Results") : t("Popular places")}</Txt>}
+        ListEmptyComponent={query ? <Txt color="muted" style={{ paddingVertical: 12 }}>{t("No place called \"{0}\" yet. Try a market, hospital or school, or choose on the map.", query)}</Txt> : undefined}
         renderItem={({ item, index }) => {
           const count = savedRows.length + results.length;
           return (
@@ -143,7 +145,7 @@ export default function Search() {
 
 function FieldRow(props: {
   marker: React.ReactNode; active: boolean; placeholder: string; value: string; detail?: string;
-  onFocus: () => void; onChangeText: (t: string) => void; autoFocus?: boolean; inputRef?: React.RefObject<TextInput | null>;
+  onFocus: () => void; onChangeText: (t: string) => void; autoFocus?: boolean; inputRef?: React.RefObject<React.ComponentRef<typeof TextInput> | null>;
 }) {
   const { colors } = useTheme();
   return (

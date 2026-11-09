@@ -1,10 +1,11 @@
 import React from "react";
 import { Pressable, View } from "react-native";
 import { formatNaira } from "../lib/pricing";
-import { PAYMENT_OPTIONS, type PaymentMethod } from "../lib/payments";
+import { paymentOptions, type PaymentMethod } from "../lib/payments";
 import { useTheme } from "../theme/ThemeProvider";
 import { Icon } from "./Icon";
 import { tap, Txt } from "./ui";
+import { t } from "../i18n";
 
 type Props = {
   value: PaymentMethod;
@@ -16,8 +17,8 @@ type Props = {
 /** Payment choices in two groups: in the app, or directly to the driver. */
 export function PaymentPicker({ value, onChange, walletBalance, fare }: Props) {
   const groups = [
-    { title: "Pay in the app", options: PAYMENT_OPTIONS.filter((o) => o.inApp) },
-    { title: "Pay the driver directly", options: PAYMENT_OPTIONS.filter((o) => !o.inApp) },
+    { title: t("Pay in the app"), options: paymentOptions().filter((o) => o.inApp) },
+    { title: t("Pay the driver directly"), options: paymentOptions().filter((o) => !o.inApp) },
   ];
   return (
     <View accessibilityRole="radiogroup" style={{ gap: 12 }}>
@@ -27,7 +28,7 @@ export function PaymentPicker({ value, onChange, walletBalance, fare }: Props) {
           {g.options.map((o) => {
             const short = o.id === "wallet" && walletBalance !== null && fare !== undefined && walletBalance < fare;
             const detail = o.id === "wallet" && walletBalance !== null
-              ? `Balance ${formatNaira(walletBalance)}${short ? " · not enough for this trip" : ""}`
+              ? (short ? t("Balance {0} · not enough for this trip", formatNaira(walletBalance)) : t("Balance {0}", formatNaira(walletBalance)))
               : o.detail;
             return (
               <Option key={o.id} icon={o.icon} label={o.label} detail={detail} selected={value === o.id} dimmed={short} onPress={() => onChange(o.id)} />

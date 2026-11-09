@@ -6,6 +6,7 @@ import { inServiceArea, serviceBounds, serviceCenter } from "../lib/area";
 import { haversineKm, type LatLng } from "../lib/geo";
 import type { Place } from "../types";
 import { api } from "./http";
+import { t } from "../i18n";
 
 const PLACES_KEY = "cr.places.v1";
 
@@ -117,7 +118,7 @@ export async function resolvePlace(place: Place): Promise<Place> {
   const url = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${place.googlePlaceId}&fields=geometry&key=${ENV.googleMapsKey}`;
   const json = await (await fetch(url)).json();
   const loc = json?.result?.geometry?.location;
-  if (!loc) throw new Error("Couldn't find that place on the map. Try another search or drop a pin.");
+  if (!loc) throw new Error(t("Couldn't find that place on the map. Try another search or drop a pin."));
   return { ...place, location: { latitude: loc.lat, longitude: loc.lng }, googlePlaceId: undefined };
 }
 
@@ -135,7 +136,7 @@ export function nearestLandmark(p: LatLng, maxKm = 1.2) {
 /** A readable description of any point: a nearby landmark, else the street from the phone's geocoder. */
 export async function describePoint(p: LatLng): Promise<string> {
   const near = nearestLandmark(p, 0.6);
-  if (near) return near.km < 0.08 ? near.place.name : `Near ${near.place.name}`;
+  if (near) return near.km < 0.08 ? near.place.name : t("Near {0}", near.place.name);
   try {
     const [r] = await Location.reverseGeocodeAsync(p);
     const parts = [r?.street ?? r?.name, r?.district ?? r?.subregion].filter(Boolean);
@@ -144,5 +145,5 @@ export async function describePoint(p: LatLng): Promise<string> {
     // ignore
   }
   const wide = nearestLandmark(p, 3);
-  return wide ? `Near ${wide.place.name}` : "Pinned location";
+  return wide ? t("Near {0}", wide.place.name) : t("Pinned location");
 }

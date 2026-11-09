@@ -19,6 +19,7 @@ import { useRide } from "../../src/store/ride";
 import { useTheme } from "../../src/theme/ThemeProvider";
 import { type as typeScale } from "../../src/theme/tokens";
 import type { Quote } from "../../src/types";
+import { t, useI18n } from "../../src/i18n";
 
 const AWAY: Record<RideTypeId, number> = { keke: 2, car: 5 }; // sample "minutes away"; the backend sends real values
 
@@ -26,6 +27,7 @@ const AWAY: Record<RideTypeId, number> = { keke: 2, car: 5 }; // sample "minutes
 const PEEK = 250;
 
 export default function Confirm() {
+  useI18n();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const ride = useRide();
@@ -49,12 +51,12 @@ export default function Confirm() {
     frame(map.current, pts, { top: insets.top + 80, bottom: sheetH + 24 });
   }, [route.length, sheetH, pickup?.id, destination?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  if (!pickup || !destination) return <Missing message="Choose where you're going first." />;
+  if (!pickup || !destination) return <Missing message={t("Choose where you're going first.")} />;
 
   const confirm = async () => {
     if (!selectedQuote) return;
     if (payment === "wallet" && wallet !== null && selectedQuote.fare > wallet) {
-      setError("Your wallet balance is too low for this trip. Choose another way to pay, or add money in Wallet.");
+      setError(t("Your wallet balance is too low for this trip. Choose another way to pay, or add money in Wallet."));
       setPayOpen(true);
       return;
     }
@@ -64,7 +66,7 @@ export default function Confirm() {
       await ride.requestRide();
       router.replace("/ride/track");
     } catch (e: any) {
-      setError(e?.message ?? "Couldn't request the ride. Try again.");
+      setError(e?.message ?? t("Couldn't request the ride. Try again."));
     } finally {
       setSubmitting(false);
     }
@@ -80,31 +82,31 @@ export default function Confirm() {
         <PickupPin coordinate={pickup.location} />
         <DropPin coordinate={destination.location} />
       </RideMap>
-      <MapButton name="back" label="Back" onPress={() => goBack("/")} style={{ left: 16, top: insets.top + 12 }} />
+      <MapButton name="back" label={t("Back")} onPress={() => goBack("/")} style={{ left: 16, top: insets.top + 12 }} />
 
       <Sheet onHeight={setSheetH} scroll peek={PEEK}>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
           <View style={{ flex: 1, minWidth: 0 }}>
-            <Txt variant="title">Choose a ride</Txt>
+            <Txt variant="title">{t("Choose a ride")}</Txt>
             <Txt variant="caption" color="muted" numberOfLines={1} style={{ fontFamily: typeScale.bodyStrong.fontFamily }}>
-              To {destination.name}{q ? ` · ${q.distanceKm.toFixed(1)} km` : ""}
+              {q ? t("To {0} · {1} km", destination.name, q.distanceKm.toFixed(1)) : t("To {0}", destination.name)}
             </Txt>
           </View>
-          {q ? <Tag text={`≈ ${q.durationMin} min`} tone="green" icon="time" /> : null}
-          <IconButton name="close" label="Change destination" size={40} onPress={() => router.push("/ride/search")} />
+          {q ? <Tag text={t("≈ {0} min", q.durationMin)} tone="green" icon="time" /> : null}
+          <IconButton name="close" label={t("Change destination")} size={40} onPress={() => router.push("/ride/search")} />
         </View>
 
         {tooClose ? (
-          <Txt style={{ color: colors.danger }}>Your pickup and destination are the same place. Choose a different destination.</Txt>
+          <Txt style={{ color: colors.danger }}>{t("Your pickup and destination are the same place. Choose a different destination.")}</Txt>
         ) : quotesStatus === "loading" || quotesStatus === "idle" ? (
           <View style={{ flexDirection: "row", alignItems: "center", gap: 10, paddingVertical: 24 }}>
             <ActivityIndicator color={colors.green} />
-            <Txt color="muted">Working out your fare…</Txt>
+            <Txt color="muted">{t("Working out your fare…")}</Txt>
           </View>
         ) : quotesStatus === "error" ? (
           <View style={{ gap: 10 }}>
             <Txt style={{ color: colors.danger }}>{quotesError}</Txt>
-            <Button title="Try again" variant="quiet" onPress={loadQuotes} />
+            <Button title={t("Try again")} variant="quiet" onPress={loadQuotes} />
           </View>
         ) : (
           <>
@@ -127,23 +129,23 @@ export default function Confirm() {
             ) : (
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel={`Payment: ${paymentOption(payment).label}. Change payment method.`}
+                accessibilityLabel={t("Payment: {0}. Change payment method.", paymentOption(payment).label)}
                 onPress={() => { tap(); setPayOpen(true); }}
                 style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", gap: 12, backgroundColor: colors.mist, borderWidth: 1, borderColor: colors.line, borderRadius: 18, padding: 12, opacity: pressed ? 0.8 : 1 })}
               >
                 <Badge icon={paymentOption(payment).icon} tone={isInApp(payment) ? "green" : "market"} size={40} />
                 <View style={{ flex: 1 }}>
-                  <Txt variant="bodyStrong">{paymentOption(payment).label} · {isInApp(payment) ? "in the app" : "to the driver"}</Txt>
+                  <Txt variant="bodyStrong">{paymentOption(payment).label} · {isInApp(payment) ? t("in the app") : t("to the driver")}</Txt>
                   <Txt variant="caption" color="muted">
-                    {payment === "wallet" ? `Balance ${wallet === null ? "…" : formatNaira(wallet)}` : paymentOption(payment).detail}
+                    {payment === "wallet" ? t("Balance {0}", wallet === null ? "…" : formatNaira(wallet)) : paymentOption(payment).detail}
                   </Txt>
                 </View>
-                <Txt variant="label" color="greenText">Change</Txt>
+                <Txt variant="label" color="greenText">{t("Change")}</Txt>
               </Pressable>
             )}
 
             {error ? <Txt variant="caption" style={{ color: colors.danger }}>{error}</Txt> : null}
-            <Button title={q ? `Confirm ${typeName(q.rideType)} · ${formatNaira(q.fare)}` : "Choose a ride"} onPress={confirm} loading={submitting} disabled={!q} />
+            <Button title={q ? t("Confirm {0} · {1}", typeName(q.rideType), formatNaira(q.fare)) : t("Choose a ride")} onPress={confirm} loading={submitting} disabled={!q} />
           </>
         )}
       </Sheet>
@@ -157,7 +159,7 @@ function RideOption({ quote, name, seats, selected, onPress }: { quote: Quote; n
     <Pressable
       accessibilityRole="radio"
       accessibilityState={{ checked: selected }}
-      accessibilityLabel={`${name}, ${seats} seats, ${formatNaira(quote.fare)}`}
+      accessibilityLabel={t("{0}, {1} seats, {2}", name, seats, formatNaira(quote.fare))}
       onPress={() => { tap(); onPress(); }}
       style={({ pressed }) => ({
         flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 10, paddingHorizontal: 12, borderRadius: 22, borderWidth: 2,
@@ -167,7 +169,7 @@ function RideOption({ quote, name, seats, selected, onPress }: { quote: Quote; n
       <VehicleArt type={quote.rideType} width={84} />
       <View style={{ flex: 1 }}>
         <Txt variant="price" style={{ fontSize: 17 }}>{name}</Txt>
-        <Txt variant="caption" color="muted" style={{ fontFamily: typeScale.bodyStrong.fontFamily }}>{seats} seats · {AWAY[quote.rideType]} min away</Txt>
+        <Txt variant="caption" color="muted" style={{ fontFamily: typeScale.bodyStrong.fontFamily }}>{t("{0} seats · {1} min away", seats, AWAY[quote.rideType])}</Txt>
       </View>
       <Txt variant="price" tabular>{formatNaira(quote.fare)}</Txt>
       {selected ? (

@@ -18,8 +18,10 @@ import { getWallet, rateRide } from "../../src/services/rides";
 import { useRide } from "../../src/store/ride";
 import { useTheme } from "../../src/theme/ThemeProvider";
 import { fonts } from "../../src/theme/tokens";
+import { t, useI18n } from "../../src/i18n";
 
 export default function Complete() {
+  useI18n();
   const { colors, isDark } = useTheme();
   const insets = useSafeAreaInsets();
   const { activeRide: ride, finishRide, changeActivePayment, payActiveByCard } = useRide();
@@ -34,7 +36,7 @@ export default function Complete() {
   useEffect(() => { getWallet().then((w) => setWallet(w.balance)).catch(() => {}); }, [ride?.paymentStatus]);
 
   if (!ride) return <Missing />;
-  const first = ride.driver?.name.split(" ")[0] ?? "your driver";
+  const first = ride.driver?.name.split(" ")[0] ?? t("your driver");
   const method = ride.paymentMethod;
   const paid = ride.paymentStatus === "paid";
 
@@ -48,14 +50,14 @@ export default function Complete() {
   const change = async (m: PaymentMethod) => {
     setError(null);
     try { await changeActivePayment(m); setChanging(false); }
-    catch (e: any) { setError(e?.message ?? "Couldn't change the payment method."); }
+    catch (e: any) { setError(e?.message ?? t("Couldn't change the payment method.")); }
   };
 
   const payCard = async () => {
     setPaying(true);
     setError(null);
     try { await payActiveByCard(); }
-    catch (e: any) { setError(e?.message ?? "Card payment didn't go through. Try again or pay another way."); }
+    catch (e: any) { setError(e?.message ?? t("Card payment didn't go through. Try again or pay another way.")); }
     finally { setPaying(false); }
   };
 
@@ -68,10 +70,10 @@ export default function Complete() {
   };
 
   const paidLine =
-    method === "wallet" ? "Paid from your wallet"
-    : method === "card" ? "Paid by card"
-    : method === "cash" ? `${first} confirmed your cash payment`
-    : `${first} confirmed your transfer`;
+    method === "wallet" ? t("Paid from your wallet")
+    : method === "card" ? t("Paid by card")
+    : method === "cash" ? t("{0} confirmed your cash payment", first)
+    : t("{0} confirmed your transfer", first);
 
   return (
     <ScrollView style={{ flex: 1, backgroundColor: colors.canvas }} contentContainerStyle={{ paddingTop: insets.top + 32, paddingHorizontal: 24, paddingBottom: insets.bottom + 24, gap: 20, flexGrow: 1 }}>
@@ -80,10 +82,10 @@ export default function Complete() {
           <LinearGradient colors={[colors.heroA, colors.heroB]} style={StyleSheet.absoluteFill} />
           <Icon name="checkmark" size={34} color="#FFFFFF" />
         </Animated.View>
-        <Txt variant="label" color="muted" align="center" style={{ marginTop: 6 }}>You've arrived at {ride.destination.name}</Txt>
+        <Txt variant="label" color="muted" align="center" style={{ marginTop: 6 }}>{t("You've arrived at {0}", ride.destination.name)}</Txt>
         <Txt variant="total" tabular>{formatNaira(ride.fare)}</Txt>
         <Txt variant="caption" color="muted" tabular>
-          {fareBreakdown(ride)} · {ride.rideType === "keke" ? "Keke" : "Car"}
+          {fareBreakdown(ride)} · {ride.rideType === "keke" ? t("Keke") : t("Car")}
         </Txt>
       </View>
 
@@ -96,54 +98,54 @@ export default function Complete() {
           </View>
         ) : changing ? (
           <>
-            <Txt variant="heading">How do you want to pay?</Txt>
+            <Txt variant="heading">{t("How do you want to pay?")}</Txt>
             <PaymentPicker value={method} walletBalance={wallet} fare={ride.fare} onChange={change} />
-            <Button title="Keep current method" variant="quiet" onPress={() => setChanging(false)} />
+            <Button title={t("Keep current method")} variant="quiet" onPress={() => setChanging(false)} />
           </>
         ) : (
           <>
             {method === "cash" && (
               <>
-                <Txt variant="heading">Pay {formatNaira(ride.fare)} in cash to {first}</Txt>
-                <Waiting text={`Waiting for ${first} to confirm the cash`} />
+                <Txt variant="heading">{t("Pay {0} in cash to {1}", formatNaira(ride.fare), first)}</Txt>
+                <Waiting text={t("Waiting for {0} to confirm the cash", first)} />
               </>
             )}
 
             {method === "transfer" && (
               <>
-                <Txt variant="heading">Transfer {formatNaira(ride.fare)} to {first}</Txt>
+                <Txt variant="heading">{t("Transfer {0} to {1}", formatNaira(ride.fare), first)}</Txt>
                 {ride.driver?.bank ? (
                   <View style={{ backgroundColor: colors.mist, borderRadius: 16, padding: 14, gap: 4, borderWidth: 1, borderColor: colors.line }}>
                     <Txt variant="caption" color="muted">{ride.driver.bank.bankName}</Txt>
                     <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
                       <Txt style={{ fontFamily: fonts.display, fontSize: 24, letterSpacing: 1, flex: 1 }} tabular selectable>{ride.driver.bank.accountNumber}</Txt>
-                      <Pressable accessibilityRole="button" accessibilityLabel="Copy account number" onPress={copyAccount} hitSlop={8} style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                      <Pressable accessibilityRole="button" accessibilityLabel={t("Copy account number")} onPress={copyAccount} hitSlop={8} style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
                         <Icon name={copied ? "check" : "copy"} size={18} color={colors.greenText} />
-                        <Txt variant="label" color="greenText">{copied ? "Copied" : "Copy"}</Txt>
+                        <Txt variant="label" color="greenText">{copied ? t("Copied") : t("Copy")}</Txt>
                       </Pressable>
                     </View>
                     <Txt variant="bodyStrong">{ride.driver.bank.accountName}</Txt>
                   </View>
                 ) : (
-                  <Txt color="muted">Ask {first} for their account details.</Txt>
+                  <Txt color="muted">{t("Ask {0} for their account details.", first)}</Txt>
                 )}
-                <Waiting text={`Waiting for ${first} to confirm the transfer`} />
+                <Waiting text={t("Waiting for {0} to confirm the transfer", first)} />
               </>
             )}
 
             {method === "card" && (
               <>
-                <Txt variant="heading">Pay {formatNaira(ride.fare)} by card</Txt>
-                <Txt variant="caption" color="muted">A secure payment page opens to take the payment.</Txt>
-                <Button title={`Pay ${formatNaira(ride.fare)}`} icon="card" onPress={payCard} loading={paying} />
+                <Txt variant="heading">{t("Pay {0} by card", formatNaira(ride.fare))}</Txt>
+                <Txt variant="caption" color="muted">{t("A secure payment page opens to take the payment.")}</Txt>
+                <Button title={t("Pay {0}", formatNaira(ride.fare))} icon="card" onPress={payCard} loading={paying} />
               </>
             )}
 
-            {method === "wallet" && <Waiting text="Taking payment from your wallet" />}
+            {method === "wallet" && <Waiting text={t("Taking payment from your wallet")} />}
 
             <Pressable accessibilityRole="button" onPress={() => { tap(); setChanging(true); }} hitSlop={6}>
               <Txt variant="label" color="greenText">
-                {isInApp(method) ? "Pay the driver directly instead" : "Pay another way"}
+                {isInApp(method) ? t("Pay the driver directly instead") : t("Pay another way")}
               </Txt>
             </Pressable>
           </>
@@ -152,10 +154,10 @@ export default function Complete() {
       </Card>
 
       <Card style={{ gap: 12, alignItems: "center" }}>
-        <Txt variant="heading" align="center">How was your ride with {first}?</Txt>
-        <View style={{ flexDirection: "row", gap: 6 }} accessibilityRole="adjustable" accessibilityLabel={`Rating: ${stars} of 5`}>
+        <Txt variant="heading" align="center">{t("How was your ride with {0}?", first)}</Txt>
+        <View style={{ flexDirection: "row", gap: 6 }} accessibilityRole="adjustable" accessibilityLabel={t("Rating: {0} of 5", stars)}>
           {[1, 2, 3, 4, 5].map((n) => (
-            <Pressable key={n} accessibilityRole="button" accessibilityLabel={`${n} star${n > 1 ? "s" : ""}`} hitSlop={4} onPress={() => { tap(); setStars(n); }} style={{ padding: 4 }}>
+            <Pressable key={n} accessibilityRole="button" accessibilityLabel={t("{0} star{1}", n, n > 1 ? "s" : "")} hitSlop={4} onPress={() => { tap(); setStars(n); }} style={{ padding: 4 }}>
               <Icon name="star" size={40} color={n <= stars ? colors.sun : colors.line} />
             </Pressable>
           ))}
@@ -164,10 +166,10 @@ export default function Complete() {
 
       <View style={{ flex: 1 }} />
       {!paid && !isInApp(method) ? (
-        <Txt variant="caption" color="muted" align="center">You can leave this screen. {first} confirms the payment from the driver app.</Txt>
+        <Txt variant="caption" color="muted" align="center">{t("You can leave this screen. {0} confirms the payment from the driver app.", first)}</Txt>
       ) : null}
-      <Button title={stars ? "Submit and finish" : "Done"} onPress={done} loading={saving} disabled={!paid && method === "card"} />
-      <Txt variant="caption" color="muted" align="center">{paymentOption(method).label} · {isInApp(method) ? "paid in the app" : "paid to the driver"}</Txt>
+      <Button title={stars ? t("Submit and finish") : t("Done")} onPress={done} loading={saving} disabled={!paid && method === "card"} />
+      <Txt variant="caption" color="muted" align="center">{paymentOption(method).label} · {isInApp(method) ? t("paid in the app") : t("paid to the driver")}</Txt>
     </ScrollView>
   );
 }

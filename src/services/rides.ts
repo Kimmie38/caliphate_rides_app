@@ -4,6 +4,7 @@ import type { PaymentMethod, Place, Quote, Ride, TripSummary, WalletTransaction 
 import { api, ApiError, wait } from "./http";
 import { mockRidePayments, mockState } from "./mockData";
 import { getRoute } from "./routing";
+import { t } from "../i18n";
 
 // Backend contract
 // POST /rides/quote        { pickup, destination }                          -> { quotes: Quote[] }
@@ -57,7 +58,7 @@ export async function requestRide(input: {
   }
   await wait(500);
   if (input.paymentMethod === "wallet" && input.quote.fare > mockState.wallet.balance) {
-    throw new ApiError("Your wallet balance is too low for this trip. Pay with cash or add money to your wallet.", 402, "insufficient_balance");
+    throw new ApiError(t("Your wallet balance is too low for this trip. Pay with cash or add money to your wallet."), 402, "insufficient_balance");
   }
   return {
     id: `ride_${Date.now()}`,
@@ -109,7 +110,7 @@ export function recordMockCompletion(ride: Ride) {
   });
   if (ride.paymentMethod === "wallet") {
     mockState.wallet.balance -= ride.fare;
-    mockState.wallet.transactions.unshift({ id: `tx_${ride.id}`, kind: "ride", label: `Ride to ${ride.destination.name}`, amount: -ride.fare, at: new Date().toISOString() });
+    mockState.wallet.transactions.unshift({ id: `tx_${ride.id}`, kind: "ride", label: t("Ride to {0}", ride.destination.name), amount: -ride.fare, at: new Date().toISOString() });
   }
 }
 
@@ -128,7 +129,7 @@ export async function startTopUp(amount: number): Promise<string | null> {
   if (ENV.useMock) {
     await wait(600);
     mockState.wallet.balance += amount;
-    mockState.wallet.transactions.unshift({ id: `tx_${Date.now()}`, kind: "topup", label: "Top up", amount, at: new Date().toISOString(), method: "Sample payment" });
+    mockState.wallet.transactions.unshift({ id: `tx_${Date.now()}`, kind: "topup", label: t("Top up"), amount, at: new Date().toISOString(), method: "Sample payment" });
     return null;
   }
   return (await api<{ checkoutUrl: string }>("/wallet/topup", { method: "POST", body: { amount } })).checkoutUrl;
@@ -143,9 +144,9 @@ export async function changePayment(ride: Ride, paymentMethod: PaymentMethod): P
   await wait(300);
   mockRidePayments[ride.id] = paymentMethod;
   if (paymentMethod === "wallet" && ride.status === "completed") {
-    if (ride.fare > mockState.wallet.balance) throw new ApiError("Your wallet balance is too low. Choose another way to pay or add money in Wallet.", 402, "insufficient_balance");
+    if (ride.fare > mockState.wallet.balance) throw new ApiError(t("Your wallet balance is too low. Choose another way to pay or add money in Wallet."), 402, "insufficient_balance");
     mockState.wallet.balance -= ride.fare;
-    mockState.wallet.transactions.unshift({ id: `tx_${ride.id}`, kind: "ride", label: `Ride to ${ride.destination.name}`, amount: -ride.fare, at: new Date().toISOString() });
+    mockState.wallet.transactions.unshift({ id: `tx_${ride.id}`, kind: "ride", label: t("Ride to {0}", ride.destination.name), amount: -ride.fare, at: new Date().toISOString() });
     return { paymentMethod, paymentStatus: "paid" };
   }
   return { paymentMethod, paymentStatus: "pending" };

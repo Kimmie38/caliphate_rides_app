@@ -4,6 +4,7 @@ import { daysUntil } from "../lib/dates";
 import * as svc from "../services/application";
 import type { DocumentKind, DriverApplication } from "../types";
 import { useSession } from "../../store/session";
+import { t } from "../../i18n";
 
 type Value = {
   application: DriverApplication | null;
@@ -34,7 +35,7 @@ export function ApplicationProvider({ children }: { children: React.ReactNode })
       setApplication(await svc.getApplication());
       setError(null);
     } catch (e: any) {
-      setError(e?.message ?? "Couldn't load your application. Check your connection.");
+      setError(e?.message ?? t("Couldn't load your application. Check your connection."));
     } finally {
       setLoading(false);
     }
@@ -114,7 +115,7 @@ export function drivingBlockers(app: DriverApplication | null): { kind: Document
     const valid = versions.find((v) => v!.status === "approved" && (!v!.expiry || daysUntil(v!.expiry) >= 0));
     if (!valid) {
       const expired = versions.some((v) => v!.expiry && daysUntil(v!.expiry) < 0);
-      out.push({ kind: d.kind, title: d.title, reason: expired ? "expired" : "not approved yet" });
+      out.push({ kind: d.kind, title: d.title, reason: expired ? t("expired") : t("not approved yet") });
     }
   }
   return out;

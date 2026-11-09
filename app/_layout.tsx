@@ -15,6 +15,8 @@ import { RideProvider } from "../src/store/ride";
 import { SavedPlacesProvider } from "../src/store/saved";
 import { SessionProvider, useSession } from "../src/store/session";
 import { ThemeProvider, useTheme } from "../src/theme/ThemeProvider";
+import { LanguageProvider, useI18n } from "../src/i18n";
+import { LanguageSync } from "../src/i18n/LanguageSync";
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -30,7 +32,9 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <ThemeProvider>
+          <LanguageProvider>
           <SessionProvider>
+            <LanguageSync />
             <ModeProvider>
               <SavedPlacesProvider>
                 <RideProvider>
@@ -39,6 +43,7 @@ export default function RootLayout() {
               </SavedPlacesProvider>
             </ModeProvider>
           </SessionProvider>
+          </LanguageProvider>
         </ThemeProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
@@ -49,8 +54,9 @@ function Root({ fontsLoaded }: { fontsLoaded: boolean }) {
   const { colors, isDark } = useTheme();
   const { status, user } = useSession();
   const { mode, ready: modeReady } = useMode();
+  const { ready: langReady } = useI18n();
   const [splashDone, setSplashDone] = useState(false);
-  const ready = fontsLoaded && status !== "loading" && modeReady;
+  const ready = fontsLoaded && status !== "loading" && modeReady && langReady;
   const signedIn = status === "signedIn";
   const hasName = !!user?.name;
   const set = signedIn && hasName; // signed in and named: ready to choose, ride or drive
@@ -79,6 +85,8 @@ function Root({ fontsLoaded }: { fontsLoaded: boolean }) {
           <Stack.Screen name="ride/confirm" />
           <Stack.Screen name="ride/track" options={{ gestureEnabled: false, animation: "fade" }} />
           <Stack.Screen name="ride/complete" options={{ gestureEnabled: false, animation: "fade" }} />
+          <Stack.Screen name="profile" />
+          <Stack.Screen name="settings" />
         </Stack.Protected>
         <Stack.Protected guard={set && mode === "driver"}>
           <Stack.Screen name="driver" options={{ animation: "fade" }} />

@@ -10,8 +10,10 @@ import { fillGuarantor } from "../../../src/driver/lib/demoFill";
 import { validateGuarantor, type Errors } from "../../../src/driver/lib/validate";
 import { useApplication } from "../../../src/driver/store/application";
 import { useSession } from "../../../src/store/session";
+import { t, useI18n } from "../../../src/i18n";
 
 export default function Guarantor() {
+  useI18n();
   const { application, update } = useApplication();
   const { user } = useSession();
   const [errors, setErrors] = useState<Errors>({});
@@ -27,13 +29,13 @@ export default function Guarantor() {
   };
 
   return (
-    <StepScreen step={5} title="Your guarantor" onBack={() => goBack("/driver/onboarding/documents")}
+    <StepScreen step={5} title={t("Your guarantor")} onBack={() => goBack("/driver/onboarding/documents")}
       intro="Someone who knows you well and can vouch for you, such as a parent, employer or community leader. We may call them to confirm."
-      footer={<Button title="Continue" onPress={next} />}>
-      <Field label="Guarantor's full name" value={g.fullName} onChangeText={(t) => set({ fullName: t })} autoCapitalize="words" error={errors.fullName} />
-      <Field label="Guarantor's phone number" value={g.phone} onChangeText={(t) => set({ phone: maskLocal(t) })} keyboardType="phone-pad" maxLength={12} placeholder="803 214 5567" error={errors.phone} />
-      <SelectField label="How do you know them?" value={g.relationship} options={RELATIONSHIPS} onChange={(r) => set({ relationship: r })} error={errors.relationship} />
-      <Field label="Guarantor's home address" value={g.address} onChangeText={(t) => set({ address: t })} multiline error={errors.address} style={{ minHeight: 80, textAlignVertical: "top" }} />
+      footer={<Button title={t("Continue")} onPress={next} />}>
+      <Field label={t("Guarantor's full name")} value={g.fullName} onChangeText={(t) => set({ fullName: t })} autoCapitalize="words" error={errors.fullName} />
+      <Field label={t("Guarantor's phone number")} value={g.phone} onChangeText={(t) => set({ phone: maskLocal(t) })} keyboardType="phone-pad" maxLength={12} placeholder="803 214 5567" error={errors.phone} />
+      <SelectField label={t("How do you know them?")} value={g.relationship} options={RELATIONSHIPS} onChange={(r) => set({ relationship: r })} error={errors.relationship} />
+      <Field label={t("Guarantor's home address")} value={g.address} onChangeText={(t) => set({ address: t })} multiline error={errors.address} style={{ minHeight: 80, textAlignVertical: "top" }} />
     </StepScreen>
   );
 }

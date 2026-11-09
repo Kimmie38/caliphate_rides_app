@@ -7,6 +7,7 @@ import { useTheme } from "../../theme/ThemeProvider";
 import { fonts } from "../../theme/tokens";
 import { Icon } from "../../components/Icon";
 import { Button, IconButton, tap, Txt } from "../../components/ui";
+import { t } from "../../i18n";
 
 // ---------- Text field ----------
 type FieldProps = TextInputProps & { label: string; error?: string; hint?: string };
@@ -37,7 +38,7 @@ export function Field({ label, error, hint, style, ...input }: FieldProps) {
 /** DD/MM/YYYY with slashes added as you type. */
 export function DateField({ label, value, onChange, error, hint }: { label: string; value: string; onChange: (v: string) => void; error?: string; hint?: string }) {
   return (
-    <Field label={label} value={value} onChangeText={(t) => onChange(maskDmy(t))} placeholder="DD/MM/YYYY" keyboardType="number-pad" maxLength={10} error={error} hint={hint} />
+    <Field label={label} value={value} onChangeText={(t) => onChange(maskDmy(t))} placeholder={t("DD/MM/YYYY")} keyboardType="number-pad" maxLength={10} error={error} hint={hint} />
   );
 }
 
@@ -53,11 +54,11 @@ export function SelectField({ label, value, options, onChange, error, placeholde
       <Txt variant="label">{label}</Txt>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={`${label}: ${value || placeholder}`}
+        accessibilityLabel={`${label}: ${value ? t(value) : t(placeholder)}`}
         onPress={() => { tap(); setOpen(true); }}
         style={{ minHeight: 52, borderRadius: 14, borderWidth: 2, borderColor: error ? colors.danger : colors.line, paddingHorizontal: 14, flexDirection: "row", alignItems: "center" }}
       >
-        <Txt variant="bodyStrong" color={value ? "ink" : "muted"} style={{ flex: 1 }}>{value || placeholder}</Txt>
+        <Txt variant="bodyStrong" color={value ? "ink" : "muted"} style={{ flex: 1 }}>{value ? t(value) : t(placeholder)}</Txt>
         <Icon name="forward" size={18} color={colors.muted} />
       </Pressable>
       {error ? <Txt variant="caption" style={{ color: colors.danger }}>{error}</Txt> : null}
@@ -65,7 +66,7 @@ export function SelectField({ label, value, options, onChange, error, placeholde
         <View style={{ flex: 1, backgroundColor: colors.paper, paddingTop: 16 }}>
           <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 20, paddingBottom: 8 }}>
             <Txt variant="title" style={{ flex: 1 }}>{label}</Txt>
-            <IconButton name="close" label="Close" onPress={() => setOpen(false)} />
+            <IconButton name="close" label={t("Close")} onPress={() => setOpen(false)} />
           </View>
           <FlatList
             data={options}
@@ -78,7 +79,7 @@ export function SelectField({ label, value, options, onChange, error, placeholde
                 onPress={() => { tap(); onChange(item); setOpen(false); }}
                 style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", paddingVertical: 15, borderBottomWidth: 1, borderBottomColor: colors.line, opacity: pressed ? 0.7 : 1 })}
               >
-                <Txt variant="bodyStrong" style={{ flex: 1 }}>{item}</Txt>
+                <Txt variant="bodyStrong" style={{ flex: 1 }}>{t(item)}</Txt>
                 {item === value ? <Icon name="check" size={22} color={colors.green} /> : null}
               </Pressable>
             )}
@@ -119,7 +120,7 @@ export async function pickPhoto(source: "camera" | "library", selfie = false): P
     if (source === "camera") {
       const perm = await ImagePicker.requestCameraPermissionsAsync();
       if (!perm.granted) {
-        Alert.alert("Camera is off", "Allow camera access in your phone's settings, or choose a photo from your gallery.");
+        Alert.alert(t("Camera is off"), t("Allow camera access in your phone's settings, or choose a photo from your gallery."));
         return null;
       }
       const r = await ImagePicker.launchCameraAsync({ mediaTypes: ["images"], quality: 0.6, cameraType: selfie ? ImagePicker.CameraType.front : ImagePicker.CameraType.back });
@@ -128,7 +129,7 @@ export async function pickPhoto(source: "camera" | "library", selfie = false): P
     const r = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ["images"], quality: 0.6 });
     return r.canceled ? null : r.assets[0]?.uri ?? null;
   } catch {
-    Alert.alert("Couldn't open the camera", "Try again, or choose a photo from your gallery.");
+    Alert.alert(t("Couldn't open the camera"), t("Try again, or choose a photo from your gallery."));
     return null;
   }
 }
@@ -144,17 +145,17 @@ export function PhotoField({ label, uri, onChange, selfie }: { label: string; ur
       <Txt variant="label">{label}</Txt>
       {uri ? (
         <View style={{ borderRadius: 16, overflow: "hidden", borderWidth: 2, borderColor: colors.green }}>
-          <Image source={{ uri }} style={{ width: "100%", aspectRatio: selfie ? 1 : 1.6, backgroundColor: colors.mist }} resizeMode="cover" accessibilityLabel={`${label} photo`} />
+          <Image source={{ uri }} style={{ width: "100%", aspectRatio: selfie ? 1 : 1.6, backgroundColor: colors.mist }} resizeMode="cover" accessibilityLabel={t("{0} photo", label)} />
           <Pressable accessibilityRole="button" onPress={() => take("camera")} style={{ position: "absolute", right: 10, bottom: 10, backgroundColor: colors.paper, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 8 }}>
-            <Txt variant="label">Retake</Txt>
+            <Txt variant="label">{t("Retake")}</Txt>
           </Pressable>
         </View>
       ) : (
         <View style={{ borderRadius: 16, borderWidth: 2, borderStyle: "dashed", borderColor: colors.line, padding: 16, gap: 10, alignItems: "center" }}>
           <Icon name="camera" size={28} color={colors.muted} />
           <View style={{ flexDirection: "row", gap: 10, alignSelf: "stretch" }}>
-            <Button title="Take photo" icon="camera" onPress={() => take("camera")} style={{ flex: 1, height: 48 }} />
-            <Button title="Gallery" variant="outline" onPress={() => take("library")} style={{ flex: 1, height: 48 }} />
+            <Button title={t("Take photo")} icon="camera" onPress={() => take("camera")} style={{ flex: 1, height: 48 }} />
+            <Button title={t("Gallery")} variant="outline" onPress={() => take("library")} style={{ flex: 1, height: 48 }} />
           </View>
         </View>
       )}
@@ -174,10 +175,10 @@ export function StepScreen({ step, title, intro, children, footer, onBack }: {
     <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1, backgroundColor: colors.canvas }}>
       <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingTop: insets.top + 12, paddingHorizontal: 20, paddingBottom: 24, gap: 18 }}>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-          {onBack ? <IconButton name="back" label="Back" onPress={onBack} size={44} /> : null}
-          <Txt variant="label" color="muted" style={{ flex: 1 }}>Step {step} of {STEPS.length} · {STEPS[step - 1]}</Txt>
+          {onBack ? <IconButton name="back" label={t("Back")} onPress={onBack} size={44} /> : null}
+          <Txt variant="label" color="muted" style={{ flex: 1 }}>{t("Step {0} of {1} · {2}", step, STEPS.length, t(STEPS[step - 1]))}</Txt>
         </View>
-        <View style={{ flexDirection: "row", gap: 4 }} accessibilityLabel={`Step ${step} of ${STEPS.length}`}>
+        <View style={{ flexDirection: "row", gap: 4 }} accessibilityLabel={t("Step {0} of {1}", step, STEPS.length)}>
           {STEPS.map((_, i) => <View key={i} style={{ flex: 1, height: 6, borderRadius: 3, backgroundColor: i < step ? colors.green : colors.line }} />)}
         </View>
         <View style={{ gap: 6 }}>

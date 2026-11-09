@@ -51,6 +51,15 @@ const ION = {
   person: "person-circle-outline",
   ribbon: "ribbon-outline",
   refresh: "refresh",
+  settings: "settings-outline",
+  lock: "lock-closed-outline",
+  mail: "mail-outline",
+  edit: "create-outline",
+  language: "language-outline",
+  calendar: "calendar-outline",
+  route: "git-branch-outline",
+  receipt: "receipt-outline",
+  info: "information-circle-outline",
 } satisfies Record<string, IonName>;
 
 export type IconName = keyof typeof ION | "keke" | "car";

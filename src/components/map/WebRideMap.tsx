@@ -13,6 +13,11 @@ import { OverlayContext, type Overlay } from "./overlays";
 import type { RideMapHandle, RideMapProps } from "./types";
 import { webMapPage, type MarkerColors } from "./webMapPage";
 
+/** react-native-webview 14's props type collapses to `never` with React Native 0.88's types, so the map
+ *  WebView is typed by hand with just what this file uses. Runtime behaviour is unchanged. */
+type WebViewHandle = { injectJavaScript: (js: string) => void; reload: () => void };
+const MapWebView = WebView as unknown as React.ComponentType<Record<string, unknown> & { ref?: React.Ref<WebViewHandle> }>;
+
 const TINTS: TintName[] = ["market", "health", "school", "mosque", "transport", "shopping", "airport", "gov", "hotel", "green"];
 
 /**
@@ -25,7 +30,7 @@ export const WebRideMap = forwardRef<RideMapHandle, RideMapProps>(function WebRi
 ) {
   const { colors, isDark } = useTheme();
   const insets = useSafeAreaInsets();
-  const view = useRef<WebView>(null);
+  const view = useRef<WebViewHandle>(null);
   const ready = useRef(false);
   const queue = useRef<string[]>([]);
   const overlays = useRef<Record<string, Overlay>>({});
@@ -114,7 +119,7 @@ export const WebRideMap = forwardRef<RideMapHandle, RideMapProps>(function WebRi
   return (
     <OverlayContext.Provider value={ctx}>
       <View style={StyleSheet.absoluteFill}>
-        <WebView
+        <MapWebView
           ref={view}
           source={{ html, baseUrl: "https://localhost/" }}
           originWhitelist={["*"]}

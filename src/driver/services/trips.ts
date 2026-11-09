@@ -7,6 +7,7 @@ import { computeFare, DEFAULT_PRICING, faresFor, billableKm, splitFare, SAMPLE_C
 import type { DriverPosition, DriverWallet, EarningsTrip, LedgerEntry, RideRequest, Trip, TripStage, VehicleType, Withdrawal } from "../types";
 import { api, getAuthToken, wait } from "../../services/http";
 import { getRoute } from "../../services/routing";
+import { t } from "../../i18n";
 
 // Backend contract (driver side)
 // Socket.IO (auth: { token })
@@ -158,8 +159,8 @@ export async function getDriverWallet(bankName = "your bank", accountNumber = ""
 export async function withdraw(amount: number, bankName = "your bank"): Promise<{ withdrawal: Withdrawal; balance: number }> {
   if (!ENV.useMock) return api("/driver/withdrawals", { method: "POST", body: { amount } });
   await wait(700);
-  if (amount < MOCK_SETTINGS.minWithdrawal) throw new Error(`You can withdraw ${formatNaira(MOCK_SETTINGS.minWithdrawal)} or more.`);
-  if (amount > mockMoney.balance) throw new Error(`Your balance is ${formatNaira(Math.max(0, mockMoney.balance))}.`);
+  if (amount < MOCK_SETTINGS.minWithdrawal) throw new Error(t("You can withdraw {0} or more.", formatNaira(MOCK_SETTINGS.minWithdrawal)));
+  if (amount > mockMoney.balance) throw new Error(t("Your balance is {0}.", formatNaira(Math.max(0, mockMoney.balance))));
   const w: Withdrawal = { id: `w_${Date.now()}`, amount, status: "processing", bankName, accountEnding: "6789", createdAt: new Date().toISOString() };
   mockMoney.withdrawals.unshift(w);
   mockPost("withdrawal", `Withdrawal to ${bankName} ••6789`, -amount);

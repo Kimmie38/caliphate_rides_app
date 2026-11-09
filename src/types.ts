@@ -18,7 +18,14 @@ export type Place = {
   googlePlaceId?: string;
 };
 
-export type User = { id: string; phone: string; name: string; rating?: number };
+export type User = {
+  id: string; phone: string; name: string; rating?: number;
+  email?: string;
+  /** The app language saved on the server ("en" or "ha"). */
+  language?: "en" | "ha";
+  /** When the account was created (ISO date). */
+  memberSince?: string;
+};
 
 export type Vehicle = { type: RideTypeId; make: string; color: string; plate: string };
 /** Where riders send bank transfers. Account number is the 10-digit NUBAN. */

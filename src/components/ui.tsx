@@ -11,6 +11,7 @@ import { useTheme } from "../theme/ThemeProvider";
 import { tint, type TintName } from "../theme/tints";
 import { fonts, glow, radius, shadow, type, type Palette, type TypeVariant } from "../theme/tokens";
 import { Icon, type IconName } from "./Icon";
+import { t } from "../i18n";
 
 export const tap = () => Haptics.selectionAsync().catch(() => {});
 
@@ -196,7 +197,7 @@ export function Avatar({ name, size = 52 }: { name: string; size?: number }) {
 export function Plate({ text }: { text: string }) {
   return (
     <View style={{ borderWidth: 2, borderColor: "#0C1D15", borderRadius: 10, paddingHorizontal: 10, paddingTop: 6, paddingBottom: 4, backgroundColor: "#FFFFFF", alignItems: "center" }}>
-      <Text style={{ position: "absolute", top: -7, fontFamily: fonts.bodyBold, fontSize: 7, letterSpacing: 1.2, color: "#00874F", backgroundColor: "#FFFFFF", paddingHorizontal: 4 }}>SOKOTO</Text>
+      <Text style={{ position: "absolute", top: -7, fontFamily: fonts.bodyBold, fontSize: 7, letterSpacing: 1.2, color: "#00874F", backgroundColor: "#FFFFFF", paddingHorizontal: 4 }}>{t("SOKOTO")}</Text>
       <Text style={{ fontFamily: fonts.displayHeavy, fontSize: 14, letterSpacing: 1.1, color: "#0C1D15" }}>{text}</Text>
     </View>
   );

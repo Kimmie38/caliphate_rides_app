@@ -6,6 +6,7 @@ import type { LatLng } from "../../lib/geo";
 import { formatNaira } from "../../lib/pricing";
 import * as trips from "../services/trips";
 import type { DriverPosition, RideRequest, Trip, TripStage, VehicleType } from "../types";
+import { t } from "../../i18n";
 
 type LocationStatus = "loading" | "ready" | "denied" | "outside" | "demo";
 
@@ -86,7 +87,7 @@ export function DrivingProvider({ children }: { children: React.ReactNode }) {
     onRequest: (r) => setRequest(r),
     onCancelled: (id) => {
       setRequest((r) => (r?.id === id ? null : r));
-      if (tripRef.current?.id === id) { setTrip(null); setNotice("The rider cancelled this trip."); }
+      if (tripRef.current?.id === id) { setTrip(null); setNotice(t("The rider cancelled this trip.")); }
     },
     onPaid: (id) => setTrip((t) => (t && t.id === id ? { ...t, paymentStatus: "paid" } : t)),
     onPaymentChanged: (p) => {
@@ -94,7 +95,7 @@ export function DrivingProvider({ children }: { children: React.ReactNode }) {
       setRequest((r) => (r && r.id === p.rideId ? { ...r, paymentMethod: p.paymentMethod } : r));
     },
     onBalance: (b) => {
-      if (b.blocked) setNotice(`You owe ${formatNaira(-b.balance)} in commission, more than the ${formatNaira(b.owedLimit)} limit. Pay it from Earnings to keep getting trips.`);
+      if (b.blocked) setNotice(t("You owe {0} in commission, more than the {1} limit. Pay it from Earnings to keep getting trips.", formatNaira(-b.balance), formatNaira(b.owedLimit)));
     },
     onError: (message) => {
       disconnect.current?.();

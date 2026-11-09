@@ -22,11 +22,13 @@ import { useSession } from "../../src/store/session";
 import { useTheme } from "../../src/theme/ThemeProvider";
 import { fonts, glow, radius, shadow } from "../../src/theme/tokens";
 import type { Place } from "../../src/types";
+import { t, useI18n } from "../../src/i18n";
 
 /** Visible height of the pulled-down sheet above the tab bar: grab handle + the "Where to?" bar. */
 const PEEK_ABOVE_TABS = 24 + 4 + 62 + 14;
 
 export default function Home() {
+  useI18n();
   const { colors, isDark } = useTheme();
   const insets = useSafeAreaInsets();
   const tabH = useTabBarHeight();
@@ -74,11 +76,11 @@ export default function Home() {
         <Glass style={{ flex: 1, borderRadius: 999, paddingVertical: 6, paddingLeft: 6, paddingRight: 16, flexDirection: "row", alignItems: "center", gap: 10 }}>
           <Avatar name={user?.name ?? ""} size={36} />
           <View style={{ flex: 1, minWidth: 0 }}>
-            <Txt style={{ fontFamily: fonts.display, fontSize: 14 }} numberOfLines={1}>Sannu, {firstName}</Txt>
-            <Txt variant="caption" color="muted" numberOfLines={1} style={{ fontSize: 12 }}>{pickup?.subtitle ?? "Finding you…"}</Txt>
+            <Txt style={{ fontFamily: fonts.display, fontSize: 14 }} numberOfLines={1}>{t("Sannu, {0}", firstName)}</Txt>
+            <Txt variant="caption" color="muted" numberOfLines={1} style={{ fontSize: 12 }}>{pickup?.subtitle ?? t("Finding you…")}</Txt>
           </View>
         </Glass>
-        <MapButton name="locate" label="Center on my location" onPress={() => { here.refresh(); center(); }} style={{ position: "relative" }} />
+        <MapButton name="locate" label={t("Center on my location")} onPress={() => { here.refresh(); center(); }} style={{ position: "relative" }} />
       </View>
 
       {rideOpen ? (
@@ -86,7 +88,7 @@ export default function Home() {
           style={{ position: "absolute", left: 16, right: 16, top: insets.top + 74, backgroundColor: colors.green, borderRadius: 18, padding: 14, flexDirection: "row", alignItems: "center", gap: 10, ...glow(isDark) }}>
           <Icon name="keke" color={colors.greenInk} />
           <Txt variant="bodyStrong" style={{ color: colors.greenInk, flex: 1 }} numberOfLines={1}>
-            {rideEnded ? (activeRide!.paymentStatus === "paid" ? "Trip ended · rate your ride" : "Trip ended · finish paying") : `Ride to ${activeRide!.destination.name}`}
+            {rideEnded ? (activeRide!.paymentStatus === "paid" ? t("Trip ended · rate your ride") : t("Trip ended · finish paying")) : t("Ride to {0}", activeRide!.destination.name)}
           </Txt>
           <Icon name="forward" size={18} color={colors.greenInk} />
         </Pressable>
@@ -95,10 +97,10 @@ export default function Home() {
       {/* Pull the sheet down to see the whole map; the "Where to?" bar stays above the tab bar. */}
       <Sheet bottomOffset={tabH} onHeight={setSheetH} scroll maxHeightRatio={0.72} peek={PEEK_ABOVE_TABS + tabH}>
         {/* Search */}
-        <Pressable accessibilityRole="button" accessibilityLabel="Where to?" onPress={() => { tap(); router.push("/ride/search"); }}
+        <Pressable accessibilityRole="button" accessibilityLabel={t("Where to?")} onPress={() => { tap(); router.push("/ride/search"); }}
           style={({ pressed }) => ({ height: 62, borderRadius: 20, backgroundColor: colors.mist, borderWidth: 1, borderColor: colors.line, flexDirection: "row", alignItems: "center", gap: 12, paddingLeft: 18, paddingRight: 8, transform: [{ scale: pressed ? 0.98 : 1 }] })}>
           <Icon name="search" color={colors.greenText} />
-          <Txt style={{ fontFamily: fonts.display, fontSize: 17, flex: 1 }}>Where to?</Txt>
+          <Txt style={{ fontFamily: fonts.display, fontSize: 17, flex: 1 }}>{t("Where to?")}</Txt>
           <View style={{ width: 46, height: 46, borderRadius: 15, backgroundColor: colors.green, alignItems: "center", justifyContent: "center", ...glow(isDark) }}>
             <Icon name="arrow" size={20} color={colors.greenInk} />
           </View>
@@ -106,16 +108,16 @@ export default function Home() {
 
         {/* Ride types */}
         <View style={{ flexDirection: "row", gap: 12 }}>
-          {(["keke", "car"] as const).map((t, i) => {
-            const cfg = pricing.rideTypes.find((r) => r.id === t);
+          {(["keke", "car"] as const).map((vt, i) => {
+            const cfg = pricing.rideTypes.find((r) => r.id === vt);
             const rate = cfg?.perKm ?? 500;
             return (
-              <Animated.View key={t} entering={FadeInDown.duration(400).delay(80 + i * 70)} style={{ flex: 1 }}>
-                <Pressable accessibilityRole="button" accessibilityLabel={`${t === "keke" ? "Keke" : "Car"}, ${formatNaira(rate)} per km`} onPress={() => pickType(t)}
+              <Animated.View key={vt} entering={FadeInDown.duration(400).delay(80 + i * 70)} style={{ flex: 1 }}>
+                <Pressable accessibilityRole="button" accessibilityLabel={t("{0}, {1} per km", vt === "keke" ? t("Keke") : t("Car"), formatNaira(rate))} onPress={() => pickType(vt)}
                   style={({ pressed }) => ({ borderRadius: 22, padding: 12, paddingBottom: 14, backgroundColor: colors.greenSoft, transform: [{ scale: pressed ? 0.97 : 1 }] })}>
-                  <View style={{ marginLeft: -4, marginTop: -2 }}><VehicleArt type={t} width={104} /></View>
-                  <Txt style={{ fontFamily: fonts.display, fontSize: 16 }}>{t === "keke" ? "Keke" : "Car"}</Txt>
-                  <Txt variant="caption" color="muted" style={{ fontFamily: fonts.bodySemi }} tabular>{cfg?.seats ?? (t === "keke" ? 3 : 4)} seats · {formatNaira(rate)}/km</Txt>
+                  <View style={{ marginLeft: -4, marginTop: -2 }}><VehicleArt type={vt} width={104} /></View>
+                  <Txt style={{ fontFamily: fonts.display, fontSize: 16 }}>{vt === "keke" ? t("Keke") : t("Car")}</Txt>
+                  <Txt variant="caption" color="muted" style={{ fontFamily: fonts.bodySemi }} tabular>{t("{0} seats · {1}/km", cfg?.seats ?? (vt === "keke" ? 3 : 4), formatNaira(rate))}</Txt>
                 </Pressable>
               </Animated.View>
             );
@@ -124,14 +126,14 @@ export default function Home() {
 
         {/* Saved places */}
         <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}>
-          <Chip icon="home" label={saved.home ? "Home" : "Add home"} onPress={() => openSaved("home")} />
-          <Chip icon="work" label={saved.work ? "Work" : "Add work"} onPress={() => openSaved("work")} />
+          <Chip icon="home" label={saved.home ? t("Home") : t("Add home")} onPress={() => openSaved("home")} />
+          <Chip icon="work" label={saved.work ? t("Work") : t("Add work")} onPress={() => openSaved("work")} />
         </View>
 
         {/* Popular places */}
         <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-          <Txt variant="heading">Popular in Sokoto</Txt>
-          <Pressable accessibilityRole="button" onPress={() => router.push("/ride/search")} hitSlop={8}><Txt variant="label" color="muted">See all</Txt></Pressable>
+          <Txt variant="heading">{t("Popular in Sokoto")}</Txt>
+          <Pressable accessibilityRole="button" onPress={() => router.push("/ride/search")} hitSlop={8}><Txt variant="label" color="muted">{t("See all")}</Txt></Pressable>
         </View>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: -20 }} contentContainerStyle={{ paddingHorizontal: 20, gap: 12, paddingBottom: 4 }}>
           {popular().map((p) => (
@@ -139,17 +141,17 @@ export default function Home() {
               style={({ pressed }) => ({ width: 140, borderRadius: 20, padding: 12, gap: 10, backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.line, ...shadow(1, isDark), transform: [{ scale: pressed ? 0.97 : 1 }] })}>
               <PlaceBadge category={p.category} />
               <Txt style={{ fontFamily: fonts.display, fontSize: 14, lineHeight: 18 }} numberOfLines={2}>{SHORT_NAMES[p.id] ?? p.name}</Txt>
-              <Txt variant="label" color="muted" tabular style={{ fontSize: 12 }}>{(haversineKm(here.location, p.location) * 1.25).toFixed(1)} km</Txt>
+              <Txt variant="label" color="muted" tabular style={{ fontSize: 12 }}>{t("{0} km", (haversineKm(here.location, p.location) * 1.25).toFixed(1))}</Txt>
             </Pressable>
           ))}
         </ScrollView>
 
         {here.status === "denied" ? (
-          <Notice text="Location is off, so the map starts in central Sokoto." action="Turn on location" onPress={() => Linking.openSettings()} />
+          <Notice text={t("Location is off, so the map starts in central Sokoto.")} action={t("Turn on location")} onPress={() => Linking.openSettings()} />
         ) : here.status === "outside" ? (
-          <Notice text="Caliphate Rides works in Sokoto city. Choose a pickup in Sokoto to book a ride." />
+          <Notice text={t("Caliphate Rides works in Sokoto city. Choose a pickup in Sokoto to book a ride.")} />
         ) : here.status === "demo" ? (
-          <Notice text="Sample mode: Sokoto's places have been moved around you. Distances and fares stay the same." />
+          <Notice text={t("Sample mode: Sokoto's places have been moved around you. Distances and fares stay the same.")} />
         ) : null}
       </Sheet>
     </View>

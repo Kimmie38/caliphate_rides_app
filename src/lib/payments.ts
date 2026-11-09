@@ -2,6 +2,8 @@
 // In-app payments are confirmed by the payment provider (Monnify); direct payments are confirmed by the driver
 // ("Cash received" / "Transfer received" in the driver app), so every trip has a payment record.
 
+import { t } from "../i18n";
+
 export type PaymentMethod = "wallet" | "card" | "cash" | "transfer";
 
 export type PaymentOption = {
@@ -19,5 +21,8 @@ export const PAYMENT_OPTIONS: PaymentOption[] = [
   { id: "transfer", label: "Bank transfer", detail: "Transfer to the driver's account at the end of the trip", inApp: false, icon: "transfer" },
 ];
 
-export const paymentOption = (m: PaymentMethod) => PAYMENT_OPTIONS.find((o) => o.id === m)!;
-export const isInApp = (m: PaymentMethod) => paymentOption(m).inApp;
+const inLanguage = (o: PaymentOption): PaymentOption => ({ ...o, label: t(o.label), detail: t(o.detail) });
+/** The options in the chosen language. */
+export const paymentOptions = () => PAYMENT_OPTIONS.map(inLanguage);
+export const paymentOption = (m: PaymentMethod) => inLanguage(PAYMENT_OPTIONS.find((o) => o.id === m)!);
+export const isInApp = (m: PaymentMethod) => PAYMENT_OPTIONS.find((o) => o.id === m)!.inApp;

@@ -30,7 +30,7 @@ export function useTabBarStyle() {
   };
 }
 
-type Props = TabTriggerSlotProps & { label: string; icon: IconName; ref?: React.Ref<View> };
+type Props = TabTriggerSlotProps & { label: string; icon: IconName; ref?: React.Ref<React.ComponentRef<typeof Pressable>> };
 
 /** One tab. The active one grows into a green capsule with its label. */
 export function TabButton({ label, icon, isFocused, onPress, ...rest }: Props) {

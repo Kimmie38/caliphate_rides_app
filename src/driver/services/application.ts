@@ -2,6 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { ENV } from "../../config/env";
 import type { DocumentKind, DocumentVersion, DriverApplication, TimelineEvent } from "../types";
 import { api, getAuthToken, wait } from "../../services/http";
+import { t } from "../../i18n";
 
 // Backend contract: the driver's official onboarding record
 // GET  /drivers/me/application                   -> { application | null }
@@ -81,7 +82,7 @@ export async function uploadDocument(
     input.files.forEach((uri, i) => form.append("files", { uri, name: `${kind}-${i + 1}.jpg`, type: "image/jpeg" } as any));
     const res = await fetch(`${ENV.apiUrl}/drivers/me/documents`, { method: "POST", headers: { Authorization: `Bearer ${getAuthToken()}` }, body: form });
     const data = await res.json().catch(() => null);
-    if (!res.ok) throw new Error(data?.message ?? "Upload failed. Check your connection and try again.");
+    if (!res.ok) throw new Error(data?.message ?? t("Upload failed. Check your connection and try again."));
     return data.application;
   }
   await wait(700);
@@ -134,7 +135,7 @@ export async function mockReview(app: DriverApplication, decision: "approve" | "
     }
     return mockSave({ ...app, documents: docs, status: "approved", approvedAt: now(), timeline: [ev("Application approved. Welcome to Caliphate Rides.", "Review team"), ...app.timeline] });
   }
-  const note = "The photo of your vehicle licence is blurry. Take a new photo in good light.";
+  const note = t("The photo of your vehicle licence is blurry. Take a new photo in good light.");
   const vl = docs.vehicle_licence;
   if (vl?.current) docs.vehicle_licence = { ...vl, current: { ...vl.current, status: "rejected", reviewNote: note } };
   return mockSave({ ...app, documents: docs, status: "changes_requested", reviewNote: note, timeline: [ev(`Changes requested: ${note}`, "Review team"), ...app.timeline] });

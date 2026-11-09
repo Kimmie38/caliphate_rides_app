@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { View } from "react-native";
 import { useTheme } from "../theme/ThemeProvider";
 import { Button, Txt } from "./ui";
+import { t } from "../i18n";
 
 /**
  * Shown by a ride screen while its data hasn't arrived.
@@ -22,7 +23,7 @@ export function Missing({ message = "This ride has ended.", home = "/(tabs)" }: 
       {show ? (
         <>
           <Txt variant="title">{message}</Txt>
-          <Button title="Back to home" onPress={() => router.replace(home)} />
+          <Button title={t("Back to home")} onPress={() => router.replace(home)} />
         </>
       ) : null}
     </View>

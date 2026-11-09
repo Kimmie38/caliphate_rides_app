@@ -13,9 +13,11 @@ import { describePoint } from "../../src/services/places";
 import { useRide } from "../../src/store/ride";
 import { useSavedPlaces, type SavedKey } from "../../src/store/saved";
 import { useTheme } from "../../src/theme/ThemeProvider";
+import { t, useI18n } from "../../src/i18n";
 
 /** Drop a pin: the rider moves the map under a pin fixed at the centre of the screen. */
 export default function Pin() {
+  useI18n();
   const { field, saveAs } = useLocalSearchParams<{ field: "pickup" | "destination"; saveAs?: string }>();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
@@ -32,7 +34,7 @@ export default function Pin() {
     setBusy(true);
     const name = await describePoint(point);
     setBusy(false);
-    const place = { id: `pin-${point.latitude.toFixed(5)},${point.longitude.toFixed(5)}`, name, subtitle: "Pinned on map", category: "pin" as const, location: point };
+    const place = { id: `pin-${point.latitude.toFixed(5)},${point.longitude.toFixed(5)}`, name, subtitle: t("Pinned on map"), category: "pin" as const, location: point };
     if (saveAs) { save(saveAs as SavedKey, place); if (router.canDismiss()) router.dismiss(2); else router.replace("/"); return; }
     if (isPickup) { setPickup(place); goBack("/ride/search"); return; }
     setDestination(place);
@@ -58,12 +60,12 @@ export default function Pin() {
         </View>
         <View style={{ position: "absolute", width: 8, height: 4, borderRadius: 4, backgroundColor: colors.ink, opacity: 0.3 }} />
       </View>
-      <MapButton name="back" label="Back" onPress={() => goBack("/ride/search")} style={{ left: 16, top: insets.top + 12 }} />
+      <MapButton name="back" label={t("Back")} onPress={() => goBack("/ride/search")} style={{ left: 16, top: insets.top + 12 }} />
 
       <Sheet>
-        <Txt variant="title">{saveAs ? "Pin the address" : isPickup ? "Set your pickup" : "Set your destination"}</Txt>
-        <Txt color="muted" numberOfLines={2}>{ok ? label : "This spot is outside our service area. Move the pin closer to the city."}</Txt>
-        <Button title={isPickup ? "Use this pickup" : "Use this spot"} onPress={confirm} disabled={!ok} loading={busy} />
+        <Txt variant="title">{saveAs ? t("Pin the address") : isPickup ? t("Set your pickup") : t("Set your destination")}</Txt>
+        <Txt color="muted" numberOfLines={2}>{ok ? label : t("This spot is outside our service area. Move the pin closer to the city.")}</Txt>
+        <Button title={isPickup ? t("Use this pickup") : t("Use this spot")} onPress={confirm} disabled={!ok} loading={busy} />
       </Sheet>
     </View>
   );

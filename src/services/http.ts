@@ -1,4 +1,5 @@
 import { ENV } from "../config/env";
+import { t } from "../i18n";
 
 let authToken: string | null = null;
 export const setAuthToken = (t: string | null) => { authToken = t; };
@@ -31,12 +32,12 @@ export async function api<T>(path: string, { method = "GET", body, signal }: Opt
       body: body === undefined ? undefined : JSON.stringify(body),
     });
   } catch {
-    throw new ApiError("Can't reach Caliphate Rides. Check your internet connection and try again.", 0, "network");
+    throw new ApiError(t("Can't reach Caliphate Rides. Check your internet connection and try again."), 0, "network");
   }
   const text = await res.text();
   let data: any = null;
   try { data = text ? JSON.parse(text) : null; } catch { data = null; }
-  if (!res.ok) throw new ApiError(data?.message ?? `Request failed (${res.status})`, res.status, data?.code);
+  if (!res.ok) throw new ApiError(data?.message ?? t("Request failed ({0})", res.status), res.status, data?.code);
   return data as T;
 }
 

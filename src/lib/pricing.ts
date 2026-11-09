@@ -1,3 +1,4 @@
+import { t } from "../i18n";
 // Fares, the same rule as the server (caliphate-backend/src/lib/pricing.js):
 //   fare = base fare + (billable km × price per km), rounded to the nearest ₦roundTo,
 //          and never less than the minimum fare
@@ -58,17 +59,17 @@ export function splitFare(fare: number, commissionPercent: number) {
 }
 
 /** How a fare was worked out, e.g. "₦300 + 3.0 km × ₦500" or "Minimum fare". */
-export function fareBreakdown(t: { distanceKm: number; baseFare?: number; ratePerKm: number; minimumFare?: number; fare: number }): string {
-  const km = `${t.distanceKm.toFixed(1)} km × ${formatNaira(t.ratePerKm)}`;
-  const byDistance = (t.baseFare ?? 0) + billableKm(t.distanceKm) * t.ratePerKm;
-  if (t.minimumFare && t.fare === t.minimumFare && byDistance < t.minimumFare) return `Minimum fare (${km} is less)`;
-  return t.baseFare ? `${formatNaira(t.baseFare)} + ${km}` : `${km} per km`;
+export function fareBreakdown(r: { distanceKm: number; baseFare?: number; ratePerKm: number; minimumFare?: number; fare: number }): string {
+  const km = `${r.distanceKm.toFixed(1)} km × ${formatNaira(r.ratePerKm)}`;
+  const byDistance = (r.baseFare ?? 0) + billableKm(r.distanceKm) * r.ratePerKm;
+  if (r.minimumFare && r.fare === r.minimumFare && byDistance < r.minimumFare) return t("Minimum fare ({0} is less)", km);
+  return r.baseFare ? `${formatNaira(r.baseFare)} + ${km}` : t("{0} per km", km);
 }
 
 /** "₦300 + ₦500/km" style summary of a ride type's fares. */
 export function describeFares(f: Pick<RideTypeConfig, "baseFare" | "perKm" | "minimumFare">): string {
   const parts = [f.baseFare ? `${formatNaira(f.baseFare)} + ${formatNaira(f.perKm)}/km` : `${formatNaira(f.perKm)}/km`];
-  if (f.minimumFare) parts.push(`min ${formatNaira(f.minimumFare)}`);
+  if (f.minimumFare) parts.push(t("min {0}", formatNaira(f.minimumFare)));
   return parts.join(" · ");
 }
 

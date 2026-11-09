@@ -3,9 +3,11 @@ import { ActivityIndicator, View } from "react-native";
 import { Button, Txt } from "../../src/components/ui";
 import { useApplication } from "../../src/driver/store/application";
 import { useTheme } from "../../src/theme/ThemeProvider";
+import { t, useI18n } from "../../src/i18n";
 
 /** Shown briefly while the driver's record loads after sign-in. */
 export default function Loading() {
+  useI18n();
   const { colors } = useTheme();
   const { error, refresh } = useApplication();
   return (
@@ -13,7 +15,7 @@ export default function Loading() {
       {error ? (
         <>
           <Txt variant="title" align="center">{error}</Txt>
-          <Button title="Try again" onPress={refresh} style={{ alignSelf: "stretch" }} />
+          <Button title={t("Try again")} onPress={refresh} style={{ alignSelf: "stretch" }} />
         </>
       ) : (
         <ActivityIndicator size="large" color={colors.green} />

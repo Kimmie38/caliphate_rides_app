@@ -7,6 +7,7 @@ import * as rides from "../services/rides";
 import { subscribeToRide } from "../services/tracking";
 import type { DriverPosition, PaymentMethod, Place, Quote, Ride } from "../types";
 import { useSession } from "./session";
+import { t } from "../i18n";
 
 type QuotesStatus = "idle" | "loading" | "ready" | "error";
 
@@ -98,7 +99,7 @@ export function RideProvider({ children }: { children: React.ReactNode }) {
   const selectedQuote = quotes.find((q) => q.rideType === rideType) ?? null;
 
   const requestRide = useCallback(async () => {
-    if (!pickup || !destination || !selectedQuote) throw new Error("Choose a pickup and destination first.");
+    if (!pickup || !destination || !selectedQuote) throw new Error(t("Choose a pickup and destination first."));
     const ride = await rides.requestRide({ pickup, destination, rideType, paymentMethod: payment, quote: selectedQuote });
     setDriverPosition(null);
     setActiveRide(ride);

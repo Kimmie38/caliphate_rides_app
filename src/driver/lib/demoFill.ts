@@ -8,7 +8,7 @@ import type { DocumentVersion, DriverApplication, VehicleType } from "../types";
 declare const require: (id: string) => number;
 
 /** The app logo stands in for document photos. */
-const samplePhoto = () => Image.resolveAssetSource(require("../../../assets/logo.png")).uri;
+const samplePhoto = () => Image.resolveAssetSource(require("../../../assets/logo.png"))?.uri ?? "";
 const yearsFromNow = (n: number) => { const d = new Date(); d.setFullYear(d.getFullYear() + n); return d.toISOString().slice(0, 10); };
 const or = (value: string, sample: string) => (value && value.trim() ? value : sample);
 
