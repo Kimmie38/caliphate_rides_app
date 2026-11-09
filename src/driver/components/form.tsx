@@ -1,8 +1,9 @@
 import * as ImagePicker from "expo-image-picker";
 import React, { useState } from "react";
-import { Alert, FlatList, Image, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, TextInput, View, type TextInputProps } from "react-native";
+import { Alert, FlatList, Image, KeyboardAvoidingView, Modal, Pressable, ScrollView, TextInput, View, type TextInputProps } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { maskDmy } from "../lib/dates";
+import { useKeyboardScroll } from "../../lib/useKeyboardScroll";
 import { useTheme } from "../../theme/ThemeProvider";
 import { fonts } from "../../theme/tokens";
 import { Icon } from "../../components/Icon";
@@ -171,9 +172,10 @@ export function StepScreen({ step, title, intro, children, footer, onBack }: {
 }) {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
+  const keyboardScroll = useKeyboardScroll();
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1, backgroundColor: colors.canvas }}>
-      <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingTop: insets.top + 12, paddingHorizontal: 20, paddingBottom: 24, gap: 18 }}>
+    <KeyboardAvoidingView behavior="padding" style={{ flex: 1, backgroundColor: colors.canvas }}>
+      <ScrollView {...keyboardScroll} keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingTop: insets.top + 12, paddingHorizontal: 20, paddingBottom: 24, gap: 18 }}>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
           {onBack ? <IconButton name="back" label={t("Back")} onPress={onBack} size={44} /> : null}
           <Txt variant="label" color="muted" style={{ flex: 1 }}>{t("Step {0} of {1} · {2}", step, STEPS.length, t(STEPS[step - 1]))}</Txt>

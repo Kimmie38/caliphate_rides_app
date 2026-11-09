@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { KeyboardAvoidingView, Platform, TextInput, View } from "react-native";
+import { KeyboardAvoidingView, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button, Txt } from "../src/components/ui";
 import { DEMO, DEMO_RIDER } from "../src/config/demo";
@@ -33,7 +33,7 @@ export default function Name() {
   };
 
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1, backgroundColor: colors.paper }}>
+    <KeyboardAvoidingView behavior="padding" style={{ flex: 1, backgroundColor: colors.paper }}>
       <View style={{ flex: 1, paddingHorizontal: 24, paddingTop: insets.top + 60, paddingBottom: insets.bottom + 24, gap: 14 }}>
         <Txt variant="hero">{t("What should drivers call you?")}</Txt>
         <Txt color="muted">{t("Your driver sees your first name when they accept your ride.")}</Txt>

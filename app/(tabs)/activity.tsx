@@ -1,6 +1,6 @@
 import { router, useFocusEffect } from "expo-router";
 import React, { useCallback, useMemo, useState } from "react";
-import { LayoutAnimation, Platform, Pressable, RefreshControl, ScrollView, UIManager, View } from "react-native";
+import { LayoutAnimation, Pressable, RefreshControl, ScrollView, View } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Icon } from "../../src/components/Icon";
@@ -14,8 +14,6 @@ import { getHistory } from "../../src/services/rides";
 import { useTheme } from "../../src/theme/ThemeProvider";
 import { fonts } from "../../src/theme/tokens";
 import type { TripSummary } from "../../src/types";
-
-if (Platform.OS === "android") UIManager.setLayoutAnimationEnabledExperimental?.(true);
 
 type Filter = "all" | "keke" | "car";
 const DAY = 86_400_000;
