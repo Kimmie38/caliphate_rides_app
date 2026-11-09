@@ -8,3 +8,6 @@ android/
 *.log
 .DS_Store
 expo-env.d.ts
+
+# Per-developer overrides
+.env*.local
