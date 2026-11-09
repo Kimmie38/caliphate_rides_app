@@ -1,7 +1,8 @@
 import { useLocalSearchParams } from "expo-router";
 import { goBack } from "../../../src/lib/nav";
+import { useKeyboardScroll } from "../../../src/lib/useKeyboardScroll";
 import React, { useState } from "react";
-import { Image, KeyboardAvoidingView, Platform, ScrollView, View } from "react-native";
+import { Image, KeyboardAvoidingView, ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ChoiceRow, DateField, Field, Pill, PhotoField, SelectField } from "../../../src/driver/components/form";
 import { Button, IconButton, Txt } from "../../../src/components/ui";
@@ -70,9 +71,11 @@ export default function DocumentScreen() {
   const title = isUpdate ? t("Update {0}", t(req.title).toLowerCase()) : t(req.title);
   const versions: DocumentVersion[] = [doc?.current, ...(doc?.history ?? [])].filter(Boolean) as DocumentVersion[];
 
+  const keyboardScroll = useKeyboardScroll();
+
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1, backgroundColor: colors.paper }}>
-      <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingTop: insets.top + 12, paddingHorizontal: 20, paddingBottom: 24, gap: 18 }}>
+    <KeyboardAvoidingView behavior="padding" style={{ flex: 1, backgroundColor: colors.paper }}>
+      <ScrollView {...keyboardScroll} keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingTop: insets.top + 12, paddingHorizontal: 20, paddingBottom: 24, gap: 18 }}>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
           <IconButton name="close" label={t("Close")} onPress={() => goBack(home)} size={44} style={{ borderRadius: 14 }} />
         </View>
