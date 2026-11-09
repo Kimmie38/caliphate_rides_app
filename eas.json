@@ -33,6 +33,14 @@
         "EXPO_PUBLIC_SERVICE_AREA": "anywhere"
       }
     },
+    "release": {
+      "extends": "base",
+      "distribution": "internal",
+      "autoIncrement": true,
+      "android": {
+        "buildType": "apk"
+      }
+    },
     "production": {
       "extends": "base",
       "autoIncrement": true,

@@ -1,7 +1,7 @@
 import { useLocalSearchParams } from "expo-router";
 import { goBack } from "../../src/lib/nav";
 import React, { useEffect, useRef, useState } from "react";
-import { KeyboardAvoidingView, Pressable, TextInput, View } from "react-native";
+import { KeyboardAvoidingView, Platform, Pressable, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button, IconButton, Txt } from "../../src/components/ui";
 import { ENV } from "../../src/config/env";
@@ -57,7 +57,7 @@ export default function Verify() {
   };
 
   return (
-    <KeyboardAvoidingView behavior="padding" style={{ flex: 1, backgroundColor: colors.paper }}>
+    <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1, backgroundColor: colors.paper }}>
       <View style={{ flex: 1, paddingHorizontal: 24, paddingTop: insets.top + 16, paddingBottom: insets.bottom + 24, gap: 14 }}>
         <IconButton name="back" label={t("Back")} onPress={() => goBack("/(auth)/welcome")} size={44} style={{ borderRadius: 14 }} />
         <Txt variant="hero" style={{ marginTop: 8 }}>{t("Enter the code")}</Txt>

@@ -1,6 +1,6 @@
 import { router } from "expo-router";
 import React, { useState } from "react";
-import { KeyboardAvoidingView, Linking, ScrollView, View } from "react-native";
+import { KeyboardAvoidingView, Linking, Platform, ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 import { Icon } from "../components/Icon";
@@ -12,7 +12,6 @@ import { useApplication } from "../driver/store/application";
 import { formatDayMonth, t, useI18n } from "../i18n";
 import { goBack } from "../lib/nav";
 import { formatNgPhone } from "../lib/phone";
-import { useKeyboardScroll } from "../lib/useKeyboardScroll";
 import { updateProfile } from "../services/auth";
 import { useSession } from "../store/session";
 import { useTheme } from "../theme/ThemeProvider";
@@ -130,11 +129,9 @@ export function RiderProfile() {
   const form = useProfileForm(true);
   const u = form.user;
 
-  const keyboardScroll = useKeyboardScroll();
-
   return (
-    <KeyboardAvoidingView behavior="padding" style={{ flex: 1, backgroundColor: colors.canvas }}>
-      <ScrollView {...keyboardScroll} keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingTop: insets.top + 12, paddingHorizontal: 20, paddingBottom: insets.bottom + 32, gap: 18 }}>
+    <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1, backgroundColor: colors.canvas }}>
+      <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingTop: insets.top + 12, paddingHorizontal: 20, paddingBottom: insets.bottom + 32, gap: 18 }}>
         <Header back="/(tabs)/account" />
         <Animated.View entering={FadeInDown.duration(350)}>
           <ProfileHero name={form.name || u?.name || ""} phone={u ? formatNgPhone(u.phone) : ""}>
@@ -178,11 +175,9 @@ export function DriverProfile() {
   const since = memberSince(a?.approvedAt);
   const support = t("To change this, call driver support on {0}.", BRAND.supportPhone);
 
-  const keyboardScroll = useKeyboardScroll();
-
   return (
-    <KeyboardAvoidingView behavior="padding" style={{ flex: 1, backgroundColor: colors.canvas }}>
-      <ScrollView {...keyboardScroll} keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingTop: insets.top + 12, paddingHorizontal: 20, paddingBottom: insets.bottom + 32, gap: 18 }}>
+    <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1, backgroundColor: colors.canvas }}>
+      <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingTop: insets.top + 12, paddingHorizontal: 20, paddingBottom: insets.bottom + 32, gap: 18 }}>
         <Header back="/driver/account" />
         <Animated.View entering={FadeInDown.duration(350)}>
           <ProfileHero name={name} phone={u ? formatNgPhone(u.phone) : ""}>

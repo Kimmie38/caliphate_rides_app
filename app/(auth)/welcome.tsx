@@ -1,6 +1,6 @@
 import { router } from "expo-router";
 import React, { useState } from "react";
-import { KeyboardAvoidingView, Pressable, ScrollView, TextInput, View } from "react-native";
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, TextInput, View } from "react-native";
 import Animated, { FadeInDown, ZoomIn } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Logo } from "../../src/components/Logo";
@@ -9,7 +9,6 @@ import { Hero } from "../../src/components/visual";
 import { BRAND } from "../../src/config/brand";
 import { DEMO, DEMO_RIDER } from "../../src/config/demo";
 import { maskLocal, normalizeNgPhone } from "../../src/lib/phone";
-import { useKeyboardScroll } from "../../src/lib/useKeyboardScroll";
 import { requestOtp } from "../../src/services/auth";
 import { useTheme } from "../../src/theme/ThemeProvider";
 import { fonts, radius } from "../../src/theme/tokens";
@@ -59,12 +58,9 @@ export default function Welcome() {
     }
   };
 
-  // Lift the phone field and the Continue button under it above the keyboard.
-  const keyboardScroll = useKeyboardScroll(110);
-
   return (
-    <KeyboardAvoidingView behavior="padding" style={{ flex: 1, backgroundColor: colors.paper }}>
-      <ScrollView {...keyboardScroll} contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled" bounces={false}>
+    <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1, backgroundColor: colors.paper }}>
+      <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled" bounces={false}>
         {/* Brand hero */}
         <Hero style={{ borderRadius: 0, minHeight: 420, paddingTop: insets.top + 24, paddingBottom: 64, alignItems: "center", justifyContent: "center", gap: 14 }}>
           <Animated.View entering={ZoomIn.springify().damping(14)}>

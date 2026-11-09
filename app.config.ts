@@ -13,7 +13,7 @@ const config: ExpoConfig = {
   name: "Caliphate Rides",
   slug: "caliphate-rides",
   scheme: "caliphaterides",
-  version: "0.1.0",
+  version: "1.0.0",
   orientation: "portrait",
   icon: "./assets/icon.png",
   userInterfaceStyle: "automatic",

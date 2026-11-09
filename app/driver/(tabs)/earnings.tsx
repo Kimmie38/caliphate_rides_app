@@ -1,7 +1,7 @@
 import { useFocusEffect } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useCallback, useState } from "react";
-import { Alert, KeyboardAvoidingView, Linking, Modal, Pressable, RefreshControl, ScrollView, TextInput, View } from "react-native";
+import { Alert, KeyboardAvoidingView, Linking, Modal, Platform, Pressable, RefreshControl, ScrollView, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Icon } from "../../../src/components/Icon";
 import { useTabBarHeight } from "../../../src/components/TabBar";
@@ -270,7 +270,7 @@ function WithdrawSheet({ open, wallet, bankName, onClose, onDone }: { open: bool
 
   return (
     <Modal visible={open} transparent animationType="slide" onRequestClose={onClose}>
-      <KeyboardAvoidingView behavior="padding" style={{ flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(0,0,0,0.35)" }}>
+      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(0,0,0,0.35)" }}>
         <Pressable style={{ flex: 1 }} onPress={onClose} accessibilityLabel={t("Close")} />
         <View style={{ backgroundColor: colors.paper, borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 20, paddingBottom: insets.bottom + 20, gap: 14 }}>
           <Txt variant="title">{t("Withdraw to your bank")}</Txt>
