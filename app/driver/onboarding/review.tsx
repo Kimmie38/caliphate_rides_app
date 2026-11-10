@@ -67,6 +67,7 @@ export default function Review() {
         <Row k="Name" v={a.personal.fullName} />
         <Row k="Phone" v={user ? formatNgPhone(user.phone) : ""} />
         <Row k="Date of birth" v={prettyDate(a.personal.dateOfBirth)} />
+        <Row k="State" v={a.personal.state} />
         <Row k="LGA" v={a.personal.lga} />
         <Row k="NIN" v={a.personal.nin ? `••••••${a.personal.nin.slice(-5)}` : ""} />
       </Section>

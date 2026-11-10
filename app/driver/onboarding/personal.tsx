@@ -3,7 +3,8 @@ import { goBack } from "../../../src/lib/nav";
 import React, { useEffect, useState } from "react";
 import { ChoiceRow, DateField, Field, SelectField, StepScreen } from "../../../src/driver/components/form";
 import { Button } from "../../../src/components/ui";
-import { SOKOTO_LGAS } from "../../../src/driver/config/requirements";
+import { STATE_LGAS, STATES } from "../../../src/driver/config/requirements";
+import { currentCity } from "../../../src/lib/area";
 import { parseDmy, toDmy } from "../../../src/driver/lib/dates";
 import { DEMO } from "../../../src/config/demo";
 import { fillPersonal } from "../../../src/driver/lib/demoFill";
@@ -18,9 +19,13 @@ export default function Personal() {
   const [dob, setDob] = useState(toDmy(application?.personal.dateOfBirth));
   const [errors, setErrors] = useState<Errors>({});
   const { user } = useSession();
-  // Start from the name they gave when they first signed in.
+  // Start from the name they gave when they first signed in, and the state they're in.
   useEffect(() => {
-    if (application && !application.personal.fullName && user?.name) update((a) => ({ ...a, personal: { ...a.personal, fullName: user.name } }));
+    if (!application) return;
+    const patch: Partial<typeof application.personal> = {};
+    if (!application.personal.fullName && user?.name) patch.fullName = user.name;
+    if (!application.personal.state) patch.state = application.personal.lga && STATE_LGAS.Sokoto.includes(application.personal.lga) ? "Sokoto" : currentCity().state;
+    if (Object.keys(patch).length) update((a) => ({ ...a, personal: { ...a.personal, ...patch } }));
   }, [application?.recordId]); // eslint-disable-line react-hooks/exhaustive-deps
   if (!application) return null;
   const p = application.personal;
@@ -40,7 +45,9 @@ export default function Personal() {
       <DateField label={t("Date of birth")} value={dob} onChange={(t) => { setDob(t); const iso = parseDmy(t); set({ dateOfBirth: iso ?? "" }); }} error={errors.dateOfBirth} />
       <ChoiceRow label={t("Gender")} value={p.gender} options={[{ value: "male", label: t("Male") }, { value: "female", label: t("Female") }]} onChange={(g) => set({ gender: g })} error={errors.gender} />
       <Field label={t("Home address")} value={p.address} onChangeText={(t) => set({ address: t })} multiline placeholder={t("House number, street and area")} error={errors.address} style={{ minHeight: 80, textAlignVertical: "top" }} />
-      <SelectField label={t("Local government area")} value={p.lga} options={SOKOTO_LGAS} onChange={(lga) => set({ lga })} error={errors.lga} />
+      <SelectField label={t("State")} value={p.state} options={STATES} onChange={(state) => set({ state, lga: state === p.state ? p.lga : "" })} error={errors.state} />
+      <SelectField label={t("Local government area")} value={p.lga} options={STATE_LGAS[p.state] ?? []} onChange={(lga) => set({ lga })} error={errors.lga}
+        placeholder={p.state ? t("Choose") : t("Choose your state first")} />
       <Field label={t("NIN (National Identification Number)")} value={p.nin} onChangeText={(t) => set({ nin: t.replace(/\D/g, "").slice(0, 11) })} keyboardType="number-pad" maxLength={11}
         error={errors.nin} hint={t("11 digits, on your NIN slip. Dial *346# to get it.")} />
       <Field label={t("Email (optional)")} value={p.email} onChangeText={(t) => set({ email: t.trim() })} keyboardType="email-address" autoCapitalize="none" autoComplete="email" error={errors.email} />

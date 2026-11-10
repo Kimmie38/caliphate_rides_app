@@ -18,6 +18,7 @@ export function fillPersonal(p: DriverApplication["personal"], name?: string): D
     dateOfBirth: or(p.dateOfBirth, "1992-04-14"),
     gender: p.gender || "male",
     address: or(p.address, "No. 12 Sultan Bello Road, Sokoto"),
+    state: or(p.state, "Sokoto"),
     lga: or(p.lga, "Sokoto North"),
     nin: /^\d{11}$/.test(p.nin) ? p.nin : "12345678901",
     email: p.email,

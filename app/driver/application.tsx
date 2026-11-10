@@ -79,7 +79,7 @@ export default function ApplicationScreen() {
         <View style={{ height: 1, backgroundColor: colors.line }} />
         <Row k="Name" v={a.personal.fullName} />
         <Row k="Phone" v={user ? formatNgPhone(user.phone) : ""} />
-        <Row k="LGA" v={a.personal.lga} />
+        <Row k="LGA" v={[a.personal.lga, a.personal.state].filter(Boolean).join(", ")} />
         <Row k="Vehicle" v={`${a.vehicleType === "keke" ? t("Keke") : t("Car")} · ${[a.vehicle.colour, a.vehicle.make, a.vehicle.model].filter(Boolean).join(" ")}`} />
         <Row k="Plate" v={a.vehicle.plate} />
         <Row k="Owner" v={a.vehicle.ownsVehicle ? t("The driver") : t("{0} (drives for the owner)", a.owner?.fullName || t("Not given"))} />

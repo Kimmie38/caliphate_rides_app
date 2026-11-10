@@ -20,7 +20,7 @@ export function emptyApplication(recordId = ""): DriverApplication {
   return {
     recordId,
     status: "draft",
-    personal: { fullName: "", dateOfBirth: "", gender: "", address: "", lga: "", nin: "", email: "" },
+    personal: { fullName: "", dateOfBirth: "", gender: "", address: "", state: "", lga: "", nin: "", email: "" },
     vehicle: { make: "", model: "", year: "", colour: "", plate: "", ownsVehicle: true },
     guarantor: { fullName: "", phone: "", relationship: "", address: "" },
     owner: { fullName: "", phone: "", email: "", address: "" },

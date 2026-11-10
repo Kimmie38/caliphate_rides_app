@@ -12,7 +12,6 @@ const PHOTOS_WHY = "Caliphate Rides lets drivers choose photos of their licence 
 const config: ExpoConfig = {
   name: "Caliphate Rides",
   slug: "caliphate-rides",
-  owner: "caliphate-rides",
   scheme: "caliphaterides",
   version: "1.0.0",
   orientation: "portrait",
@@ -70,8 +69,6 @@ const config: ExpoConfig = {
     ],
   ],
   experiments: { typedRoutes: false },
-  // Links this app to its EAS project. `eas init` can't edit a .ts config, so it lives here.
-  extra: { eas: { projectId: "fca4536f-9563-44ef-b19a-b7056f3fb6d8" } },
 };
 
 export default config;

@@ -8,7 +8,7 @@
         "EXPO_PUBLIC_ROUTING_URL": "https://routing.caliphaterides.com.ng",
         "EXPO_PUBLIC_USE_MOCK": "false",
         "EXPO_PUBLIC_API_URL": "https://api.caliphaterides.com.ng",
-        "EXPO_PUBLIC_MAP_TILES_URL": "https://tiles.caliphaterides.com.ng/sokoto",
+        "EXPO_PUBLIC_MAP_TILES_URL": "https://tiles.caliphaterides.com.ng/caliphate",
         "EXPO_PUBLIC_MAP_GLYPHS_URL": "https://tiles.caliphaterides.com.ng/font/{fontstack}/{range}"
       }
     },

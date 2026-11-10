@@ -20,6 +20,7 @@ import { drivingBlockers, expiringSoon, useApplication } from "../../../src/driv
 import { useDriving } from "../../../src/driver/store/driving";
 import { useTheme } from "../../../src/theme/ThemeProvider";
 import { t, useI18n } from "../../../src/i18n";
+import { cityNames } from "../../../src/lib/area";
 
 export default function Drive() {
   useI18n();
@@ -157,8 +158,8 @@ export default function Drive() {
               <Stat value={String(tripsToday)} label={t("Trips today")} />
               <Stat value={today === null ? "…" : formatNaira(today)} label={t("Earned today")} />
             </View>
-            {d.locationStatus === "demo" ? <Txt variant="caption" color="muted">{t("Sample mode: you're outside Sokoto, so Sokoto's places have been moved around you. Requests start a few seconds after you go online.")}</Txt> : null}
-            {d.locationStatus === "outside" ? <Txt variant="caption" color="muted">{t("You're outside Sokoto. You'll get requests when you're in the service area.")}</Txt> : null}
+            {d.locationStatus === "demo" ? <Txt variant="caption" color="muted">{t("Sample mode: you're outside our cities, so Sokoto's places have been moved around you. Requests start a few seconds after you go online.")}</Txt> : null}
+            {d.locationStatus === "outside" ? <Txt variant="caption" color="muted">{t("You're outside {0}. You'll get requests when you're in one of those cities.", cityNames())}</Txt> : null}
           </>
         )}
       </Sheet>

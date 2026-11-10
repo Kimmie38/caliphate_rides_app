@@ -114,3 +114,17 @@ export function decodePolyline(encoded: string): LatLng[] {
 /** Rough service area around Sokoto city (Sokoto North/South and the airport). */
 export const SOKOTO_AREA = { minLat: 12.85, maxLat: 13.15, minLng: 5.1, maxLng: 5.35 };
 export const SOKOTO_CENTER: LatLng = { latitude: 13.0482, longitude: 5.231 };
+
+export type Box = { minLat: number; maxLat: number; minLng: number; maxLng: number };
+export type City = { id: string; name: string; state: string; center: LatLng; area: Box };
+
+/** The cities Caliphate Rides works in (the same boxes as the backend's src/data/cities.js). */
+export const CITIES: City[] = [
+  { id: "sokoto", name: "Sokoto", state: "Sokoto", center: SOKOTO_CENTER, area: SOKOTO_AREA },
+  { id: "kano", name: "Kano", state: "Kano", center: { latitude: 12.0022, longitude: 8.592 }, area: { minLat: 11.85, maxLat: 12.15, minLng: 8.35, maxLng: 8.75 } },
+  { id: "kaduna", name: "Kaduna", state: "Kaduna", center: { latitude: 10.5105, longitude: 7.4165 }, area: { minLat: 10.35, maxLat: 10.7, minLng: 7.25, maxLng: 7.6 } },
+  { id: "abuja", name: "Abuja", state: "FCT (Abuja)", center: { latitude: 9.0765, longitude: 7.3986 }, area: { minLat: 8.85, maxLat: 9.25, minLng: 7.0, maxLng: 7.65 } },
+  { id: "jos", name: "Jos", state: "Plateau", center: { latitude: 9.8965, longitude: 8.8583 }, area: { minLat: 9.7, maxLat: 10.05, minLng: 8.7, maxLng: 9.05 } },
+];
+
+export const inBox = (p: LatLng, b: Box) => p.latitude >= b.minLat && p.latitude <= b.maxLat && p.longitude >= b.minLng && p.longitude <= b.maxLng;

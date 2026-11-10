@@ -60,6 +60,7 @@ const ION = {
   route: "git-branch-outline",
   receipt: "receipt-outline",
   info: "information-circle-outline",
+  whatsapp: "logo-whatsapp",
 } satisfies Record<string, IonName>;
 
 export type IconName = keyof typeof ION | "keke" | "car";

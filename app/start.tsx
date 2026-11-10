@@ -29,12 +29,12 @@ export default function Start() {
       <Txt variant="hero" style={{ marginTop: 8 }}>{t("Sannu, {0}. How do you want to use Caliphate Rides?", first)}</Txt>
 
       <Animated.View entering={FadeInDown.duration(450).delay(100)}>
-        <Pressable accessibilityRole="button" accessibilityLabel={t("Ride. Book a keke or car around Sokoto.")} onPress={() => choose("rider")}
+        <Pressable accessibilityRole="button" accessibilityLabel={t("Ride. Book a keke or car around your city.")} onPress={() => choose("rider")}
           style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.98 : 1 }] })}>
           <View style={{ backgroundColor: colors.paper, borderRadius: 28, padding: 18, flexDirection: "row", alignItems: "center", gap: 12, borderWidth: isDark ? 1 : 0, borderColor: colors.line, ...shadow(2, isDark) }}>
             <View style={{ flex: 1, gap: 6 }}>
               <Txt variant="title" style={{ fontSize: 24 }}>{t("Ride")}</Txt>
-              <Txt color="muted">{t("Book a keke or car around Sokoto and track it live.")}</Txt>
+              <Txt color="muted">{t("Book a keke or car around your city and track it live.")}</Txt>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginTop: 4 }}>
                 <Txt variant="label" color="greenText">{t("Start riding")}</Txt><Icon name="arrow" size={16} color={colors.greenText} />
               </View>

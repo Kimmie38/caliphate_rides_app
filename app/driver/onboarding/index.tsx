@@ -28,7 +28,7 @@ export default function ChooseVehicle() {
     <StepScreen
       step={1}
       title={t("What will you drive?")}
-      intro="Caliphate Rides takes keke and cars in Sokoto. You'll need the papers for the vehicle you choose."
+      intro="Caliphate Rides takes keke and cars in Sokoto, Kano, Kaduna, Abuja and Jos. You'll need the papers for the vehicle you choose."
       footer={<Button title={t("Continue")} disabled={!v && !DEMO} onPress={() => {
         if (!v) update((a) => ({ ...a, vehicleType: "keke" })); // sample mode: keke if none chosen
         router.push("/driver/onboarding/personal");

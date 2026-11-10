@@ -1,7 +1,7 @@
 import * as Location from "expo-location";
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { ENV } from "../../config/env";
-import { inServiceArea, relocateTo, serviceCenter } from "../../lib/area";
+import { inServiceArea, noteLocation, relocateTo, serviceCenter } from "../../lib/area";
 import type { LatLng } from "../../lib/geo";
 import { formatNaira } from "../../lib/pricing";
 import * as trips from "../services/trips";
@@ -53,6 +53,7 @@ export function DrivingProvider({ children }: { children: React.ReactNode }) {
         const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced }).catch(() => Location.getLastKnownPositionAsync());
         if (!pos) return setLocationStatus("denied");
         const here = { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
+        noteLocation(here);
         if (!inServiceArea(here)) {
           if (ENV.useMock && ENV.demoAtMyLocation) { relocateTo(here); setLocationStatus("demo"); }
           else setLocationStatus("outside");

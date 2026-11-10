@@ -23,6 +23,7 @@ import { useTheme } from "../../src/theme/ThemeProvider";
 import { fonts, glow, radius, shadow } from "../../src/theme/tokens";
 import type { Place } from "../../src/types";
 import { t, useI18n } from "../../src/i18n";
+import { cityNames, currentCity } from "../../src/lib/area";
 
 /** Visible height of the pulled-down sheet above the tab bar: grab handle + the "Where to?" bar. */
 const PEEK_ABOVE_TABS = 24 + 4 + 62 + 14;
@@ -131,10 +132,10 @@ export default function Home() {
         </View>
 
         {/* Popular places */}
-        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-          <Txt variant="heading">{t("Popular in Sokoto")}</Txt>
+        {popular().length ? <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+          <Txt variant="heading">{t("Popular in {0}", currentCity().name)}</Txt>
           <Pressable accessibilityRole="button" onPress={() => router.push("/ride/search")} hitSlop={8}><Txt variant="label" color="muted">{t("See all")}</Txt></Pressable>
-        </View>
+        </View> : null}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: -20 }} contentContainerStyle={{ paddingHorizontal: 20, gap: 12, paddingBottom: 4 }}>
           {popular().map((p) => (
             <Pressable key={p.id} accessibilityRole="button" accessibilityLabel={p.name} onPress={() => { tap(); goTo(p); }}
@@ -147,9 +148,9 @@ export default function Home() {
         </ScrollView>
 
         {here.status === "denied" ? (
-          <Notice text={t("Location is off, so the map starts in central Sokoto.")} action={t("Turn on location")} onPress={() => Linking.openSettings()} />
+          <Notice text={t("Location is off, so the map starts in central {0}.", currentCity().name)} action={t("Turn on location")} onPress={() => Linking.openSettings()} />
         ) : here.status === "outside" ? (
-          <Notice text={t("Caliphate Rides works in Sokoto city. Choose a pickup in Sokoto to book a ride.")} />
+          <Notice text={t("Caliphate Rides works in {0}. Choose a pickup in one of those cities to book a ride.", cityNames())} />
         ) : here.status === "demo" ? (
           <Notice text={t("Sample mode: Sokoto's places have been moved around you. Distances and fares stay the same.")} />
         ) : null}

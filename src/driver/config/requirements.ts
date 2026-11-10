@@ -87,6 +87,29 @@ export const SOKOTO_LGAS = [
   "Tangaza", "Tureta", "Wamako", "Wurno", "Yabo",
 ];
 
+/** The states drivers can sign up in, with their local government areas (FCT: area councils). */
+export const STATE_LGAS: Record<string, string[]> = {
+  Sokoto: SOKOTO_LGAS,
+  Kano: [
+    "Ajingi", "Albasu", "Bagwai", "Bebeji", "Bichi", "Bunkure", "Dala", "Dambatta", "Dawakin Kudu", "Dawakin Tofa",
+    "Doguwa", "Fagge", "Gabasawa", "Garko", "Garun Mallam", "Gaya", "Gezawa", "Gwale", "Gwarzo", "Kabo",
+    "Kano Municipal", "Karaye", "Kibiya", "Kiru", "Kumbotso", "Kunchi", "Kura", "Madobi", "Makoda", "Minjibir",
+    "Nasarawa", "Rano", "Rimin Gado", "Rogo", "Shanono", "Sumaila", "Takai", "Tarauni", "Tofa", "Tsanyawa",
+    "Tudun Wada", "Ungogo", "Warawa", "Wudil",
+  ],
+  Kaduna: [
+    "Birnin Gwari", "Chikun", "Giwa", "Igabi", "Ikara", "Jaba", "Jema'a", "Kachia", "Kaduna North", "Kaduna South",
+    "Kagarko", "Kajuru", "Kaura", "Kauru", "Kubau", "Kudan", "Lere", "Makarfi", "Sabon Gari", "Sanga",
+    "Soba", "Zangon Kataf", "Zaria",
+  ],
+  "FCT (Abuja)": ["Abaji", "Abuja Municipal (AMAC)", "Bwari", "Gwagwalada", "Kuje", "Kwali"],
+  Plateau: [
+    "Barkin Ladi", "Bassa", "Bokkos", "Jos East", "Jos North", "Jos South", "Kanam", "Kanke", "Langtang North",
+    "Langtang South", "Mangu", "Mikang", "Pankshin", "Qua'an Pan", "Riyom", "Shendam", "Wase",
+  ],
+};
+export const STATES = Object.keys(STATE_LGAS);
+
 export const BANKS = [
   "Access Bank", "Ecobank", "Fidelity Bank", "First Bank", "FCMB", "Globus Bank", "GTBank", "Jaiz Bank",
   "Keystone Bank", "Kuda", "Moniepoint", "OPay", "PalmPay", "Polaris Bank", "Providus Bank", "Stanbic IBTC",

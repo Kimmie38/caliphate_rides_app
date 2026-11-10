@@ -16,6 +16,7 @@ export function validatePersonal(p: DriverApplication["personal"], dobText: stri
   else if (ageOn(dob) > 90) e.dateOfBirth = t("Check the year of your date of birth.");
   if (!p.gender) e.gender = t("Choose one.");
   if (p.address.trim().length < 8) e.address = t("Enter your house address, including the area.");
+  if (!p.state) e.state = t("Choose your state.");
   if (!p.lga) e.lga = t("Choose your local government area.");
   if (!/^\d{11}$/.test(p.nin)) e.nin = t("Your NIN has 11 digits. Dial *346# to get it if you don't have your slip.");
   if (p.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(p.email)) e.email = t("Check the email address, or leave it empty.");

@@ -64,6 +64,7 @@ export type DriverApplication = {
     dateOfBirth: string; // YYYY-MM-DD
     gender: "" | "male" | "female";
     address: string;
+    state: string; // Sokoto, Kano, Kaduna, FCT (Abuja) or Plateau
     lga: string;
     nin: string; // National Identification Number, 11 digits
     email: string;

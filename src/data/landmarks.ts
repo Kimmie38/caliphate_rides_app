@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from "react";
-import { shift } from "../lib/area";
+import { serviceCenter, shift } from "../lib/area";
+import { haversineKm } from "../lib/geo";
 import type { Place, PlaceCategory } from "../types";
 
 // Places on our map: popular pickup and drop-off points in Sokoto city (coordinates from Google Maps,
@@ -69,8 +70,10 @@ export function landmarks(): Landmark[] {
   return BASE.map((l) => ({ ...l, location: shift(l.location) }));
 }
 
+/** Popular places in the city the person is in (within about 40 km of its centre). */
 export function popular(): Landmark[] {
-  return landmarks().filter((l) => l.popular);
+  const c = serviceCenter();
+  return landmarks().filter((l) => l.popular && haversineKm(c, l.location) < 40);
 }
 
 /** Short labels for chips. */

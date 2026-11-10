@@ -1,16 +1,14 @@
 import { router } from "expo-router";
-import React, { useState } from "react";
-import { KeyboardAvoidingView, Pressable, ScrollView, TextInput, View } from "react-native";
+import React, { useEffect, useState } from "react";
+import { ActivityIndicator, Pressable, ScrollView, View } from "react-native";
 import Animated, { FadeInDown, ZoomIn } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Logo } from "../../src/components/Logo";
 import { Button, tap, Txt } from "../../src/components/ui";
 import { Hero } from "../../src/components/visual";
 import { BRAND } from "../../src/config/brand";
-import { DEMO, DEMO_RIDER } from "../../src/config/demo";
-import { maskLocal, normalizeNgPhone } from "../../src/lib/phone";
-import { useKeyboardScroll } from "../../src/lib/useKeyboardScroll";
-import { requestOtp } from "../../src/services/auth";
+import { Icon } from "../../src/components/Icon";
+import { getSignInMethods, type SignInMethods } from "../../src/services/auth";
 import { useTheme } from "../../src/theme/ThemeProvider";
 import { fonts, radius } from "../../src/theme/tokens";
 import { t, useI18n } from "../../src/i18n";
@@ -34,82 +32,66 @@ function LanguagePill({ top }: { top: number }) {
   );
 }
 
+/** One big way in: an icon, a title and a line under it. */
+function Choice({ icon, title, detail, onPress, primary }: { icon: "whatsapp" | "mail" | "phone"; title: string; detail: string; onPress: () => void; primary?: boolean }) {
+  const { colors } = useTheme();
+  const bg = primary ? "#25D366" : colors.paper;
+  const fg = primary ? "#FFFFFF" : colors.ink;
+  return (
+    <Pressable accessibilityRole="button" accessibilityLabel={title} onPress={() => { tap(); onPress(); }}
+      style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", gap: 14, padding: 16, borderRadius: 20, backgroundColor: bg, borderWidth: primary ? 0 : 2, borderColor: colors.line, transform: [{ scale: pressed ? 0.98 : 1 }] })}>
+      <View style={{ width: 46, height: 46, borderRadius: 15, backgroundColor: primary ? "rgba(255,255,255,0.22)" : colors.greenSoft, alignItems: "center", justifyContent: "center" }}>
+        <Icon name={icon} size={24} color={primary ? "#FFFFFF" : colors.greenText} />
+      </View>
+      <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
+        <Txt style={{ fontFamily: fonts.display, fontSize: 17, color: fg }}>{title}</Txt>
+        <Txt variant="caption" style={{ color: fg, opacity: primary ? 0.9 : 0.65 }}>{detail}</Txt>
+      </View>
+      <Icon name="forward" size={20} color={primary ? "#FFFFFF" : colors.muted} />
+    </Pressable>
+  );
+}
+
 export default function Welcome() {
   useI18n();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
-  const [local, setLocal] = useState("");
-  const [focused, setFocused] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  // Sample mode: an empty number signs in with a sample one.
-  const phone = normalizeNgPhone(local) ?? (DEMO && !local.trim() ? DEMO_RIDER.phone : null);
+  const [methods, setMethods] = useState<SignInMethods | null>(null);
 
-  const send = async () => {
-    if (!phone) return setError(t("Enter a Nigerian mobile number, like 803 214 5567."));
-    setError(null);
-    setLoading(true);
-    try {
-      await requestOtp(phone);
-      router.push({ pathname: "/(auth)/verify", params: { phone } });
-    } catch (e: any) {
-      setError(e?.message ?? t("Couldn't send the code. Try again."));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Lift the phone field and the Continue button under it above the keyboard.
-  const keyboardScroll = useKeyboardScroll(110);
+  useEffect(() => { getSignInMethods().then(setMethods); }, []);
+  // An older server without WhatsApp or email: phone codes only.
+  const none = methods && !methods.whatsapp && !methods.email;
 
   return (
-    <KeyboardAvoidingView behavior="padding" style={{ flex: 1, backgroundColor: colors.paper }}>
-      <ScrollView {...keyboardScroll} contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled" bounces={false}>
-        {/* Brand hero */}
-        <Hero style={{ borderRadius: 0, minHeight: 420, paddingTop: insets.top + 24, paddingBottom: 64, alignItems: "center", justifyContent: "center", gap: 14 }}>
-          <Animated.View entering={ZoomIn.springify().damping(14)}>
-            <Logo size={170} style={{ shadowColor: "#00301B", shadowOpacity: 0.35, shadowRadius: 24, shadowOffset: { width: 0, height: 10 } }} />
-          </Animated.View>
-          <Txt style={{ color: "#FFFFFF", opacity: 0.9, fontFamily: fonts.bodySemi }}>{t("Rides across Sokoto, from keke to car")}</Txt>
-          <LanguagePill top={insets.top + 12} />
-        </Hero>
-
-        {/* Sign-in card overlapping the hero */}
-        <Animated.View entering={FadeInDown.duration(500).delay(150)}
-          style={{ flex: 1, marginTop: -36, backgroundColor: colors.paper, borderTopLeftRadius: radius.sheet, borderTopRightRadius: radius.sheet, paddingHorizontal: 22, paddingTop: 28, paddingBottom: insets.bottom + 20, gap: 14 }}>
-          <Txt variant="hero" style={{ fontSize: 28, lineHeight: 32 }}>{t("Welcome")}</Txt>
-          <Txt color="muted" style={{ marginTop: -6 }}>{t("Book a ride, or sign up to drive your own keke or car.")}</Txt>
-
-          <View style={{ flexDirection: "row", alignItems: "center", height: 62, borderRadius: 18, borderWidth: 2, borderColor: error ? colors.danger : focused ? colors.green : colors.line, overflow: "hidden", marginTop: 6 }}>
-            <View style={{ height: "100%", paddingHorizontal: 14, flexDirection: "row", alignItems: "center", gap: 8, backgroundColor: colors.greenSoft }}>
-              {/* Nigerian flag */}
-              <View style={{ flexDirection: "row", width: 22, height: 15, borderRadius: 3, overflow: "hidden" }}>
-                <View style={{ flex: 1, backgroundColor: "#008751" }} /><View style={{ flex: 1, backgroundColor: "#FFFFFF" }} /><View style={{ flex: 1, backgroundColor: "#008751" }} />
-              </View>
-              <Txt style={{ fontFamily: fonts.display, fontSize: 16, color: colors.greenText }}>+234</Txt>
-            </View>
-            <TextInput
-              accessibilityLabel={t("Phone number")}
-              value={local}
-              onChangeText={(t) => { setLocal(maskLocal(t)); setError(null); }}
-              onFocus={() => setFocused(true)}
-              onBlur={() => setFocused(false)}
-              onSubmitEditing={send}
-              placeholder="803 214 5567"
-              placeholderTextColor={colors.muted}
-              keyboardType="phone-pad"
-              textContentType="telephoneNumber"
-              autoComplete="tel"
-              maxLength={12}
-              style={{ flex: 1, paddingHorizontal: 14, fontFamily: fonts.display, fontSize: 18, color: colors.ink, letterSpacing: 0.3 }}
-            />
-          </View>
-          {error ? <Txt variant="caption" style={{ color: colors.danger }}>{error}</Txt> : null}
-          <Button title={t("Continue")} onPress={send} loading={loading} disabled={!phone} />
-          <Txt variant="caption" color="muted" align="center">{t("We'll text you a 6-digit code. By continuing you agree to {0}'s terms.", BRAND.name)}</Txt>
-          {DEMO ? <Txt variant="caption" color="greenText" align="center">{t("Sample mode: tap Continue to skip ahead with sample details.")}</Txt> : null}
+    <ScrollView style={{ flex: 1, backgroundColor: colors.paper }} contentContainerStyle={{ flexGrow: 1 }} bounces={false}>
+      {/* Brand hero */}
+      <Hero style={{ borderRadius: 0, minHeight: 400, paddingTop: insets.top + 24, paddingBottom: 64, alignItems: "center", justifyContent: "center", gap: 14 }}>
+        <Animated.View entering={ZoomIn.springify().damping(14)}>
+          <Logo size={160} style={{ shadowColor: "#00301B", shadowOpacity: 0.35, shadowRadius: 24, shadowOffset: { width: 0, height: 10 } }} />
         </Animated.View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+        <Txt style={{ color: "#FFFFFF", opacity: 0.9, fontFamily: fonts.bodySemi }}>{t("Keke and car rides in Sokoto, Kano, Kaduna, Abuja and Jos")}</Txt>
+        <LanguagePill top={insets.top + 12} />
+      </Hero>
+
+      {/* Sign-in card overlapping the hero */}
+      <Animated.View entering={FadeInDown.duration(500).delay(150)}
+        style={{ flex: 1, marginTop: -36, backgroundColor: colors.paper, borderTopLeftRadius: radius.sheet, borderTopRightRadius: radius.sheet, paddingHorizontal: 22, paddingTop: 28, paddingBottom: insets.bottom + 20, gap: 14 }}>
+        <Txt variant="hero" style={{ fontSize: 28, lineHeight: 32 }}>{t("Welcome")}</Txt>
+        <Txt color="muted" style={{ marginTop: -6 }}>{t("Book a ride, or sign up to drive your own keke or car.")}</Txt>
+
+        {!methods ? <ActivityIndicator color={colors.green} style={{ marginVertical: 24 }} /> : (
+          <View style={{ gap: 12, marginTop: 4 }}>
+            {methods.whatsapp ? <Choice primary icon="whatsapp" title={t("Continue with WhatsApp")} detail={t("Send us a code from WhatsApp. Free and quick.")} onPress={() => router.push("/(auth)/whatsapp")} /> : null}
+            {methods.email ? <Choice icon="mail" title={t("Continue with email")} detail={t("We email you a 6-digit code.")} onPress={() => router.push("/(auth)/email")} /> : null}
+            {none ? <Choice icon="phone" title={t("Continue with your phone number")} detail={t("We send you a 6-digit code.")} onPress={() => router.push("/(auth)/phone")} /> : (
+              <Pressable accessibilityRole="button" onPress={() => router.push("/(auth)/phone")} hitSlop={8} style={{ alignSelf: "center", paddingVertical: 6 }}>
+                <Txt variant="label" color="greenText">{t("Have a code for your phone number?")}</Txt>
+              </Pressable>
+            )}
+          </View>
+        )}
+        <Txt variant="caption" color="muted" align="center">{t("By continuing you agree to {0}'s terms.", BRAND.name)}</Txt>
+      </Animated.View>
+    </ScrollView>
   );
 }

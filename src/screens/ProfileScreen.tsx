@@ -1,6 +1,6 @@
 import { router } from "expo-router";
 import React, { useState } from "react";
-import { KeyboardAvoidingView, Linking, ScrollView, View } from "react-native";
+import { KeyboardAvoidingView, Linking, Platform, ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 import { Icon } from "../components/Icon";
@@ -12,7 +12,6 @@ import { useApplication } from "../driver/store/application";
 import { formatDayMonth, t, useI18n } from "../i18n";
 import { goBack } from "../lib/nav";
 import { formatNgPhone } from "../lib/phone";
-import { useKeyboardScroll } from "../lib/useKeyboardScroll";
 import { updateProfile } from "../services/auth";
 import { useSession } from "../store/session";
 import { useTheme } from "../theme/ThemeProvider";
@@ -74,6 +73,19 @@ function Header({ back }: { back: "/(tabs)/account" | "/driver/account" }) {
   );
 }
 
+/** The email someone can sign in with (besides WhatsApp), or a way to add one. */
+function SignInEmailRow({ href }: { href: "/sign-in-email" | "/driver/sign-in-email" }) {
+  const { user } = useSession();
+  return (
+    <Group>
+      <SettingRow icon="mail" tone="school"
+        title={user?.signInEmail ? t("Sign-in email") : t("Add a sign-in email")}
+        detail={user?.signInEmail || t("Sign in with a code by email, as well as WhatsApp")}
+        onPress={() => router.push(href)} />
+    </Group>
+  );
+}
+
 /** Saves name and email; shows a "Saved" line for a moment. */
 function useProfileForm(editName: boolean) {
   const { user, updateUser } = useSession();
@@ -130,11 +142,9 @@ export function RiderProfile() {
   const form = useProfileForm(true);
   const u = form.user;
 
-  const keyboardScroll = useKeyboardScroll();
-
   return (
-    <KeyboardAvoidingView behavior="padding" style={{ flex: 1, backgroundColor: colors.canvas }}>
-      <ScrollView {...keyboardScroll} keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingTop: insets.top + 12, paddingHorizontal: 20, paddingBottom: insets.bottom + 32, gap: 18 }}>
+    <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1, backgroundColor: colors.canvas }}>
+      <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingTop: insets.top + 12, paddingHorizontal: 20, paddingBottom: insets.bottom + 32, gap: 18 }}>
         <Header back="/(tabs)/account" />
         <Animated.View entering={FadeInDown.duration(350)}>
           <ProfileHero name={form.name || u?.name || ""} phone={u ? formatNgPhone(u.phone) : ""}>
@@ -151,8 +161,12 @@ export function RiderProfile() {
             <Field label={t("Email (optional)")} value={form.email} onChangeText={(v) => { form.setEmail(v); form.setErrors({}); }}
               autoCapitalize="none" autoComplete="email" keyboardType="email-address" textContentType="emailAddress" placeholder="name@example.com"
               error={form.errors.email} hint={t("For receipts and account messages.")} />
-            <LockedRow label={t("Phone number")} value={u ? formatNgPhone(u.phone) : ""} note={t("You sign in with this number. To change it, call support.")} />
+            <LockedRow label={t("Phone number")} value={u ? formatNgPhone(u.phone) : ""} note={t("You sign in with this number on WhatsApp. To change it, call support.")} />
           </Card>
+        </Animated.View>
+
+        <Animated.View entering={FadeInDown.duration(350).delay(90)}>
+          <SignInEmailRow href="/sign-in-email" />
         </Animated.View>
 
         <SaveBar form={form} />
@@ -178,11 +192,9 @@ export function DriverProfile() {
   const since = memberSince(a?.approvedAt);
   const support = t("To change this, call driver support on {0}.", BRAND.supportPhone);
 
-  const keyboardScroll = useKeyboardScroll();
-
   return (
-    <KeyboardAvoidingView behavior="padding" style={{ flex: 1, backgroundColor: colors.canvas }}>
-      <ScrollView {...keyboardScroll} keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingTop: insets.top + 12, paddingHorizontal: 20, paddingBottom: insets.bottom + 32, gap: 18 }}>
+    <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1, backgroundColor: colors.canvas }}>
+      <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingTop: insets.top + 12, paddingHorizontal: 20, paddingBottom: insets.bottom + 32, gap: 18 }}>
         <Header back="/driver/account" />
         <Animated.View entering={FadeInDown.duration(350)}>
           <ProfileHero name={name} phone={u ? formatNgPhone(u.phone) : ""}>
@@ -213,8 +225,12 @@ export function DriverProfile() {
             <Field label={t("Email (optional)")} value={form.email} onChangeText={(v) => { form.setEmail(v); form.setErrors({}); }}
               autoCapitalize="none" autoComplete="email" keyboardType="email-address" textContentType="emailAddress" placeholder="name@example.com"
               error={form.errors.email} hint={t("For payout receipts and account messages.")} />
-            <LockedRow label={t("Phone number")} value={u ? formatNgPhone(u.phone) : ""} note={t("You sign in with this number.")} />
+            <LockedRow label={t("Phone number")} value={u ? formatNgPhone(u.phone) : ""} note={t("You sign in with this number on WhatsApp.")} />
           </Card>
+        </Animated.View>
+
+        <Animated.View entering={FadeInDown.duration(350).delay(100)}>
+          <SignInEmailRow href="/driver/sign-in-email" />
         </Animated.View>
 
         <SaveBar form={form} />

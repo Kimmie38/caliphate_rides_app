@@ -56,6 +56,7 @@ function DriverStack() {
         <Stack.Screen name="trip" options={{ animation: "slide_from_bottom", gestureEnabled: false }} />
         <Stack.Screen name="profile" />
         <Stack.Screen name="settings" />
+        <Stack.Screen name="sign-in-email" />
       </Stack.Protected>
       <Stack.Protected guard={stage === "review" || stage === "fixing" || stage === "active"}>
         <Stack.Screen name="application" options={{ animation: "fade" }} />

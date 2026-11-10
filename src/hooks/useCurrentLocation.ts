@@ -1,7 +1,7 @@
 import * as Location from "expo-location";
 import { useCallback, useEffect, useState } from "react";
 import { ENV } from "../config/env";
-import { inServiceArea, relocateTo, serviceCenter } from "../lib/area";
+import { inServiceArea, noteLocation, relocateTo, serviceCenter } from "../lib/area";
 import type { LatLng } from "../lib/geo";
 
 export type LocationState =
@@ -23,6 +23,7 @@ export function useCurrentLocation() {
       const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced }).catch(() => last);
       if (!pos) return setState({ status: "denied", location: serviceCenter() });
       const here = { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
+      noteLocation(here); // the city they're in (or nearest): map, search and popular places follow it
       if (inServiceArea(here)) return setState({ status: "ready", location: here });
       if (ENV.useMock && ENV.demoAtMyLocation) {
         // Try-it-anywhere: put central Sokoto (and every landmark) around where you are.
