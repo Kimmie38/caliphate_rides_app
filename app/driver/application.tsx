@@ -83,7 +83,7 @@ export default function ApplicationScreen() {
         <Row k="Vehicle" v={`${a.vehicleType === "keke" ? t("Keke") : t("Car")} · ${[a.vehicle.colour, a.vehicle.make, a.vehicle.model].filter(Boolean).join(" ")}`} />
         <Row k="Plate" v={a.vehicle.plate} />
         <Row k="Owner" v={a.vehicle.ownsVehicle ? t("The driver") : t("{0} (drives for the owner)", a.owner?.fullName || t("Not given"))} />
-        {!a.vehicle.ownsVehicle ? <Row k="Owner's contact" v={[a.owner?.phone, a.owner?.email].filter(Boolean).join(" · ")} /> : null}
+        {!a.vehicle.ownsVehicle ? <Row k="Owner's phone" v={a.owner?.phone ?? ""} /> : null}
         <Row k="Guarantor" v={`${a.guarantor.fullName} (${t(a.guarantor.relationship).toLowerCase()})`} />
         <Row k="Payouts" v={`${a.bank.bankName} · ${a.bank.accountNumber}`} />
         <Row k="Submitted" v={a.submittedAt ? prettyDateTime(a.submittedAt) : t("Not yet")} />

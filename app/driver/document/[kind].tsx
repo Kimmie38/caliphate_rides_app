@@ -1,4 +1,5 @@
 import { useLocalSearchParams } from "expo-router";
+import { errorText } from "../../../src/services/http";
 import { goBack } from "../../../src/lib/nav";
 import React, { useState } from "react";
 import { Image, KeyboardAvoidingView, Platform, ScrollView, View } from "react-native";
@@ -61,7 +62,7 @@ export default function DocumentScreen() {
       });
       goBack(home);
     } catch (err: any) {
-      setErrors({ save: err?.message ?? "Couldn't upload. Check your connection and try again." });
+      setErrors({ save: errorText(err, "Couldn't upload. Check your connection and try again.") });
     } finally {
       setBusy(false);
     }

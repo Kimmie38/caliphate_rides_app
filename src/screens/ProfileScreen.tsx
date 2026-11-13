@@ -13,11 +13,11 @@ import { formatDayMonth, t, useI18n } from "../i18n";
 import { goBack } from "../lib/nav";
 import { formatNgPhone } from "../lib/phone";
 import { updateProfile } from "../services/auth";
+import { errorText } from "../services/http";
 import { useSession } from "../store/session";
 import { useTheme } from "../theme/ThemeProvider";
 import { fonts } from "../theme/tokens";
 
-const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const memberSince = (iso?: string) => {
   if (!iso) return "";
   const d = new Date(iso);
@@ -73,36 +73,34 @@ function Header({ back }: { back: "/(tabs)/account" | "/driver/account" }) {
   );
 }
 
-/** Saves name and email; shows a "Saved" line for a moment. */
+/** Saves the name; shows a "Saved" line for a moment. */
 function useProfileForm(editName: boolean) {
   const { user, updateUser } = useSession();
   const [name, setName] = useState(user?.name ?? "");
-  const [email, setEmail] = useState(user?.email ?? "");
-  const [errors, setErrors] = useState<{ name?: string; email?: string; form?: string }>({});
+  const [errors, setErrors] = useState<{ name?: string; form?: string }>({});
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
-  const changed = (editName && name.trim() !== (user?.name ?? "")) || email.trim().toLowerCase() !== (user?.email ?? "");
+  const changed = editName && name.trim() !== (user?.name ?? "");
 
   const save = async () => {
-    if (!user) return;
+    if (!user || !editName) return;
     const e: typeof errors = {};
     if (editName && name.trim().length < 2) e.name = t("Enter your name.");
-    if (email.trim() && !EMAIL.test(email.trim())) e.email = t("Check the email address, or leave it empty.");
     setErrors(e);
     if (Object.keys(e).length) return;
     setSaving(true);
     try {
-      const next = await updateProfile({ ...(editName ? { name: name.trim() } : {}), email: email.trim().toLowerCase() }, user);
+      const next = await updateProfile({ name: name.trim() }, user);
       await updateUser(next);
       setSaved(true);
       setTimeout(() => setSaved(false), 2500);
     } catch (err: any) {
-      setErrors({ form: err?.message ?? t("Couldn't save. Check your connection and try again.") });
+      setErrors({ form: errorText(err, t("Couldn't save. Check your connection and try again.")) });
     } finally {
       setSaving(false);
     }
   };
-  return { user, name, setName, email, setEmail, errors, setErrors, saving, saved, changed, save };
+  return { user, name, setName, errors, setErrors, saving, saved, changed, save };
 }
 
 function SaveBar({ form }: { form: ReturnType<typeof useProfileForm> }) {
@@ -121,7 +119,7 @@ function SaveBar({ form }: { form: ReturnType<typeof useProfileForm> }) {
   );
 }
 
-/** Rider profile: name and email can be changed here; the phone number is how they sign in. */
+/** Rider profile: the name can be changed here; the phone number is how they sign in. */
 export function RiderProfile() {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
@@ -145,14 +143,8 @@ export function RiderProfile() {
             <Txt variant="heading">{t("Your details")}</Txt>
             <Field label={t("Full name")} value={form.name} onChangeText={(v) => { form.setName(v); form.setErrors({}); }}
               autoCapitalize="words" autoComplete="name" textContentType="name" error={form.errors.name} hint={t("Drivers see your first name.")} />
-            <Field label={t("Email (optional)")} value={form.email} onChangeText={(v) => { form.setEmail(v); form.setErrors({}); }}
-              autoCapitalize="none" autoComplete="email" keyboardType="email-address" textContentType="emailAddress" placeholder="name@example.com"
-              error={form.errors.email} hint={t("For receipts and account messages.")} />
             <LockedRow label={t("Phone number")} value={u ? formatNgPhone(u.phone) : ""} note={t("You sign in with this number. To change it, call support.")} />
           </Card>
-        </Animated.View>
-
-        <Animated.View entering={FadeInDown.duration(350).delay(90)}>
         </Animated.View>
 
         <SaveBar form={form} />
@@ -165,7 +157,7 @@ export function RiderProfile() {
   );
 }
 
-/** Driver profile: the official record decides the name, vehicle and bank; email can be changed here. */
+/** Driver profile: the official record decides the name, vehicle and bank (driver support changes them). */
 export function DriverProfile() {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
@@ -208,17 +200,9 @@ export function DriverProfile() {
           <Card style={{ gap: 16 }}>
             <Txt variant="heading">{t("Your details")}</Txt>
             <LockedRow label={t("Full name")} value={name} note={t("Your name comes from your licence. {0}", support)} />
-            <Field label={t("Email (optional)")} value={form.email} onChangeText={(v) => { form.setEmail(v); form.setErrors({}); }}
-              autoCapitalize="none" autoComplete="email" keyboardType="email-address" textContentType="emailAddress" placeholder="name@example.com"
-              error={form.errors.email} hint={t("For payout receipts and account messages.")} />
             <LockedRow label={t("Phone number")} value={u ? formatNgPhone(u.phone) : ""} note={t("You sign in with this number. To change it, call driver support.")} />
           </Card>
         </Animated.View>
-
-        <Animated.View entering={FadeInDown.duration(350).delay(100)}>
-        </Animated.View>
-
-        <SaveBar form={form} />
 
         {a ? (
           <Animated.View entering={FadeInDown.duration(350).delay(120)} style={{ gap: 10 }}>

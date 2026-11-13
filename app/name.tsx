@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { errorText } from "../src/services/http";
 import { KeyboardAvoidingView, Platform, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button, Txt } from "../src/components/ui";
@@ -26,7 +27,7 @@ export default function Name() {
       // Saving the name opens the app: the guards in app/_layout.tsx switch screens automatically.
       await updateUser(await updateProfile({ name: name.trim() || DEMO_RIDER.name }, user));
     } catch (e: any) {
-      setError(e?.message ?? t("Couldn't save your name. Try again."));
+      setError(errorText(e, t("Couldn't save your name. Try again.")));
     } finally {
       setLoading(false);
     }

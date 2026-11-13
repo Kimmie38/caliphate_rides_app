@@ -1,6 +1,9 @@
+import { explainCheckout, openCheckout } from "../../src/lib/checkout";
+import { appAlert } from "../../src/components/AppAlert";
+import { errorText } from "../../src/services/http";
 import { useFocusEffect } from "expo-router";
 import React, { useCallback, useState } from "react";
-import { ActivityIndicator, Alert, Linking, Pressable, ScrollView, View } from "react-native";
+import { ActivityIndicator, Pressable, ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Icon } from "../../src/components/Icon";
 import { KnotMark } from "../../src/components/Knot";
@@ -39,10 +42,13 @@ export default function Wallet() {
     setBusy(true);
     try {
       const url = await startTopUp(amount);
-      if (url) await Linking.openURL(url); // payment checkout; the backend credits the wallet when the payment provider confirms
+      // The payment page opens inside the app and closes by itself; the server credits the wallet
+      // once the payment provider confirms, so reload either way.
+      const result = url ? await openCheckout(url) : "success";
       await load();
+      if (url) explainCheckout(result, t("Your wallet has been topped up."));
     } catch (e: any) {
-      Alert.alert(t("Top up didn't start"), e?.message ?? t("Try again in a moment."));
+      appAlert(t("Top up didn't start"), errorText(e, t("Try again in a moment.")));
     } finally {
       setBusy(false);
     }

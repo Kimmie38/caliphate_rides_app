@@ -1,4 +1,5 @@
 import { router, useLocalSearchParams } from "expo-router";
+import { errorText } from "../../src/services/http";
 import { goBack } from "../../src/lib/nav";
 import React, { useEffect, useRef, useState } from "react";
 import { FlatList, Pressable, TextInput, View } from "react-native";
@@ -53,7 +54,7 @@ export default function Search() {
       setDestination(p);
       router.dismissTo("/ride/confirm"); // back to an open confirm screen, or replaces this one
     } catch (e: any) {
-      setError(e?.message ?? t("Couldn't use that place. Try another."));
+      setError(errorText(e, t("Couldn't use that place. Try another.")));
     }
   };
 

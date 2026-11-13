@@ -50,7 +50,6 @@ export default function Personal() {
         placeholder={p.state ? t("Choose") : t("Choose your state first")} />
       <Field label={t("NIN (National Identification Number)")} value={p.nin} onChangeText={(t) => set({ nin: t.replace(/\D/g, "").slice(0, 11) })} keyboardType="number-pad" maxLength={11}
         error={errors.nin} hint={t("11 digits, on your NIN slip. Dial *346# to get it.")} />
-      <Field label={t("Email (optional)")} value={p.email} onChangeText={(t) => set({ email: t.trim() })} keyboardType="email-address" autoCapitalize="none" autoComplete="email" error={errors.email} />
     </StepScreen>
   );
 }

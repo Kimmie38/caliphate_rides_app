@@ -67,12 +67,13 @@ export type DriverApplication = {
     state: string; // Sokoto, Kano, Kaduna, FCT (Abuja) or Plateau
     lga: string;
     nin: string; // National Identification Number, 11 digits
-    email: string;
+    /** From older versions of the app; no longer asked. */
+    email?: string;
   };
   vehicle: { make: string; model: string; year: string; colour: string; plate: string; ownsVehicle: boolean };
   guarantor: { fullName: string; phone: string; relationship: string; address: string };
   /** Only when the driver drives someone else's vehicle (vehicle.ownsVehicle = false). */
-  owner: { fullName: string; phone: string; email: string; address: string };
+  owner: { fullName: string; phone: string; email?: string; address: string };
   bank: {
     bankName: string; accountNumber: string; accountName: string;
     /** Set once the bank has confirmed whose account it is (backend only). */

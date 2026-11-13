@@ -1,4 +1,5 @@
 import { Manrope_400Regular, Manrope_500Medium, Manrope_600SemiBold, Manrope_700Bold } from "@expo-google-fonts/manrope";
+import { AlertHost } from "../src/components/AppAlert";
 import { Sora_600SemiBold, Sora_700Bold, Sora_800ExtraBold } from "@expo-google-fonts/sora";
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
@@ -23,7 +24,7 @@ SplashScreen.preventAutoHideAsync().catch(() => {});
 const RIDER_TABS = ["/activity", "/wallet", "/account"];
 
 export default function RootLayout() {
-  const [fontsLoaded] = useFonts({
+  const [fontsLoaded, fontError] = useFonts({
     Sora_600SemiBold, Sora_700Bold, Sora_800ExtraBold,
     Manrope_400Regular, Manrope_500Medium, Manrope_600SemiBold, Manrope_700Bold,
   });
@@ -38,7 +39,7 @@ export default function RootLayout() {
             <ModeProvider>
               <SavedPlacesProvider>
                 <RideProvider>
-                  <Root fontsLoaded={fontsLoaded} />
+                  <Root fontsLoaded={fontsLoaded || !!fontError} />
                 </RideProvider>
               </SavedPlacesProvider>
             </ModeProvider>
@@ -107,6 +108,7 @@ function Root({ fontsLoaded }: { fontsLoaded: boolean }) {
           <Stack.Screen name="(auth)" options={{ animation: "fade" }} />
         </Stack.Protected>
       </Stack>
+      <AlertHost />
       {!splashDone && <AnimatedSplash onFinish={() => setSplashDone(true)} />}
     </View>
   );

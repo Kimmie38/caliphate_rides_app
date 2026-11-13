@@ -19,7 +19,6 @@ export function validatePersonal(p: DriverApplication["personal"], dobText: stri
   if (!p.state) e.state = t("Choose your state.");
   if (!p.lga) e.lga = t("Choose your local government area.");
   if (!/^\d{11}$/.test(p.nin)) e.nin = t("Your NIN has 11 digits. Dial *346# to get it if you don't have your slip.");
-  if (p.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(p.email)) e.email = t("Check the email address, or leave it empty.");
   return e;
 }
 
@@ -59,7 +58,6 @@ export function validateOwner(o: DriverApplication["owner"], driverPhone: string
   const ph = normalizeNgPhone(o.phone);
   if (!ph) e.phone = t("Enter the owner's Nigerian mobile number.");
   else if (driverPhone && ph === driverPhone) e.phone = t("Enter the owner's own number, not yours.");
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(o.email.trim())) e.email = t("Enter the owner's email address.");
   if (o.address.trim().length < 8) e.address = t("Enter the owner's house address.");
   return e;
 }
@@ -103,7 +101,7 @@ export function missingSections(app: DriverApplication): string[] {
   return missing;
 }
 
-export const EMPTY_OWNER: DriverApplication["owner"] = { fullName: "", phone: "", email: "", address: "" };
+export const EMPTY_OWNER: DriverApplication["owner"] = { fullName: "", phone: "", address: "" };
 
 function toDmyOrEmpty(iso: string) {
   if (!iso) return "";

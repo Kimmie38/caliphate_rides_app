@@ -29,21 +29,35 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         const cached = await secureStore.get(USER_KEY);
         if (!token) return setStatus("signedOut");
         setAuthToken(token);
-        let u: User | null = cached ? JSON.parse(cached) : null;
-        if (!ENV.useMock) {
-          try {
-            u = await getMe();
-          } catch (e) {
-            if (e instanceof ApiError && e.status === 401) {
-              await clear();
-              return setStatus("signedOut");
-            }
-            // offline: keep the cached profile
+        let u: User | null = null;
+        try { u = cached ? (JSON.parse(cached) as User) : null; } catch { u = null; }
+
+        // Saved profile: open the app straight away and refresh it in the background,
+        // so a slow connection never leaves people looking at the splash screen.
+        if (u) {
+          setUser(u);
+          setStatus("signedIn");
+          if (!ENV.useMock) {
+            getMe({ timeoutMs: 15_000 })
+              .then(async (fresh) => { setUser(fresh); await secureStore.set(USER_KEY, JSON.stringify(fresh)).catch(() => {}); })
+              .catch(async (e) => {
+                if (e instanceof ApiError && e.status === 401) { await clear(); setUser(null); setStatus("signedOut"); }
+                // offline or slow: keep the saved profile
+              });
           }
+          return;
         }
-        if (!u) return setStatus("signedOut");
-        setUser(u);
-        setStatus("signedIn");
+        // Signed in but no saved profile (rare): fetch it, but don't wait long.
+        if (ENV.useMock) return setStatus("signedOut");
+        try {
+          const fresh = await getMe({ timeoutMs: 8_000 });
+          await secureStore.set(USER_KEY, JSON.stringify(fresh)).catch(() => {});
+          setUser(fresh);
+          setStatus("signedIn");
+        } catch (e) {
+          if (e instanceof ApiError && e.status === 401) await clear();
+          setStatus("signedOut");
+        }
       } catch {
         setStatus("signedOut");
       }

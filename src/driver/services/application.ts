@@ -1,4 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { UserMessage } from "../../services/http";
 import { ENV } from "../../config/env";
 import type { DocumentKind, DocumentVersion, DriverApplication, TimelineEvent } from "../types";
 import { api, getAuthToken, wait } from "../../services/http";
@@ -20,10 +21,10 @@ export function emptyApplication(recordId = ""): DriverApplication {
   return {
     recordId,
     status: "draft",
-    personal: { fullName: "", dateOfBirth: "", gender: "", address: "", state: "", lga: "", nin: "", email: "" },
+    personal: { fullName: "", dateOfBirth: "", gender: "", address: "", state: "", lga: "", nin: "" },
     vehicle: { make: "", model: "", year: "", colour: "", plate: "", ownsVehicle: true },
     guarantor: { fullName: "", phone: "", relationship: "", address: "" },
-    owner: { fullName: "", phone: "", email: "", address: "" },
+    owner: { fullName: "", phone: "", address: "" },
     bank: { bankName: "", accountNumber: "", accountName: "" },
     documents: {},
     timeline: [],
@@ -82,7 +83,7 @@ export async function uploadDocument(
     input.files.forEach((uri, i) => form.append("files", { uri, name: `${kind}-${i + 1}.jpg`, type: "image/jpeg" } as any));
     const res = await fetch(`${ENV.apiUrl}/drivers/me/documents`, { method: "POST", headers: { Authorization: `Bearer ${getAuthToken()}` }, body: form });
     const data = await res.json().catch(() => null);
-    if (!res.ok) throw new Error(data?.message ?? t("Upload failed. Check your connection and try again."));
+    if (!res.ok) throw new UserMessage(data?.message ?? t("Upload failed. Check your connection and try again."));
     return data.application;
   }
   await wait(700);

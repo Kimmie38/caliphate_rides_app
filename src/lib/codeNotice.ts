@@ -1,5 +1,6 @@
-import * as Notifications from "expo-notifications";
+import type * as NotificationsModule from "expo-notifications";
 import { Linking, Platform } from "react-native";
+import { optional } from "./optional";
 import { BRAND } from "../config/brand";
 import { t } from "../i18n";
 import { requestOtp, type OtpRequest } from "../services/auth";
@@ -8,6 +9,10 @@ import { requestOtp, type OtpRequest } from "../services/auth";
 // The code is only ever shown in the notification, never inside the app. If notifications are off,
 // the code waits here (in memory, not on screen) until the person turns them on, then it's sent.
 
+// Missing only from development builds made before notifications were added: then the code
+// screen asks to turn notifications on, and support can still read the code from the server log.
+const loaded = optional(() => require("expo-notifications") as typeof NotificationsModule);
+const Notifications = loaded as typeof NotificationsModule; // every use below checks `loaded` first or sits in a try
 const CHANNEL = "sign-in-codes";
 const GREEN = "#00874F"; // tints the icon and app name in the notification header (Android)
 const KIND = "sign-in-code";
@@ -34,13 +39,13 @@ async function setUp() {
 
 /** True if this app may show notifications right now (doesn't ask). */
 export async function notificationsAllowed(): Promise<boolean> {
-  if (Platform.OS === "web") return false;
+  if (Platform.OS === "web" || !loaded) return false;
   try { return (await Notifications.getPermissionsAsync()).granted; } catch { return false; }
 }
 
 /** Asks for permission to show notifications (Android 13+ and iPhone show a prompt the first time). */
 export async function allowNotifications(): Promise<boolean> {
-  if (Platform.OS === "web") return false;
+  if (Platform.OS === "web" || !loaded) return false;
   try {
     await setUp();
     const now = await Notifications.getPermissionsAsync();
@@ -122,6 +127,7 @@ export async function sendSignInCode(phone: string, opts: { forgotPin?: boolean 
 
 /** Removes the code notification (after signing in, or when a new code replaces it). */
 export async function clearCode(phone: string) {
+  if (!loaded) return;
   const id = shownAs.get(phone);
   if (!id) return;
   shownAs.delete(phone);
@@ -129,14 +135,14 @@ export async function clearCode(phone: string) {
 }
 
 type CodeData = { kind?: string; phone?: string; code?: string };
-const codeIn = (r: Notifications.NotificationResponse | null) => {
+const codeIn = (r: NotificationsModule.NotificationResponse | null) => {
   const d = r?.notification.request.content.data as CodeData | undefined;
   return d?.kind === KIND && typeof d.phone === "string" && typeof d.code === "string" ? { phone: d.phone, code: d.code, at: r!.notification.date } : null;
 };
 
 /** Calls back with the code when the person taps its notification. Returns a function that stops listening. */
 export function onCodeTapped(phone: string, fill: (code: string) => void): () => void {
-  if (Platform.OS === "web") return () => {};
+  if (Platform.OS === "web" || !loaded) return () => {};
   const sub = Notifications.addNotificationResponseReceivedListener((r) => {
     const c = codeIn(r);
     if (c?.phone !== phone) return;
@@ -152,7 +158,7 @@ export function onCodeTapped(phone: string, fill: (code: string) => void): () =>
  * screen can carry on with the code. Codes older than 5 minutes have expired, so they're ignored.
  */
 export async function takeCodeTappedWhileClosed(): Promise<{ phone: string; code: string } | null> {
-  if (Platform.OS === "web") return null;
+  if (Platform.OS === "web" || !loaded) return null;
   try {
     const c = codeIn(await Notifications.getLastNotificationResponseAsync());
     if (!c) return null;

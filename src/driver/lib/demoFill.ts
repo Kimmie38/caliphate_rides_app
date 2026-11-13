@@ -21,7 +21,6 @@ export function fillPersonal(p: DriverApplication["personal"], name?: string): D
     state: or(p.state, "Sokoto"),
     lga: or(p.lga, "Sokoto North"),
     nin: /^\d{11}$/.test(p.nin) ? p.nin : "12345678901",
-    email: p.email,
   };
 }
 
@@ -50,7 +49,6 @@ export function fillOwner(o: DriverApplication["owner"] | undefined): DriverAppl
   return {
     fullName: or(o?.fullName ?? "", "Alhaji Sani Bello"),
     phone: or(o?.phone ?? "", "803 555 0199"),
-    email: or(o?.email ?? "", "sani.bello@example.com"),
     address: or(o?.address ?? "", "No. 7 Emir Yahaya Road, Sokoto"),
   };
 }

@@ -1,4 +1,5 @@
 import { io, type Socket } from "socket.io-client";
+import { UserMessage } from "../../services/http";
 import { ENV } from "../../config/env";
 import { landmarks } from "../../data/landmarks";
 import { haversineKm, type LatLng } from "../../lib/geo";
@@ -159,8 +160,8 @@ export async function getDriverWallet(bankName = "your bank", accountNumber = ""
 export async function withdraw(amount: number, bankName = "your bank"): Promise<{ withdrawal: Withdrawal; balance: number }> {
   if (!ENV.useMock) return api("/driver/withdrawals", { method: "POST", body: { amount } });
   await wait(700);
-  if (amount < MOCK_SETTINGS.minWithdrawal) throw new Error(t("You can withdraw {0} or more.", formatNaira(MOCK_SETTINGS.minWithdrawal)));
-  if (amount > mockMoney.balance) throw new Error(t("Your balance is {0}.", formatNaira(Math.max(0, mockMoney.balance))));
+  if (amount < MOCK_SETTINGS.minWithdrawal) throw new UserMessage(t("You can withdraw {0} or more.", formatNaira(MOCK_SETTINGS.minWithdrawal)));
+  if (amount > mockMoney.balance) throw new UserMessage(t("Your balance is {0}.", formatNaira(Math.max(0, mockMoney.balance))));
   const w: Withdrawal = { id: `w_${Date.now()}`, amount, status: "processing", bankName, accountEnding: "6789", createdAt: new Date().toISOString() };
   mockMoney.withdrawals.unshift(w);
   mockPost("withdrawal", `Withdrawal to ${bankName} ••6789`, -amount);

@@ -27,7 +27,7 @@ export const mockState = {
 };
 
 export function mockUser(phone: string, name = ""): User {
-  return { id: "u_demo", phone, name, rating: 4.9, email: "", language: "en", memberSince: new Date(Date.now() - 40 * 86_400_000).toISOString() };
+  return { id: "u_demo", phone, name, rating: 4.9, language: "en", memberSince: new Date(Date.now() - 40 * 86_400_000).toISOString() };
 }
 
 export const MOCK_DRIVERS: Record<RideTypeId, Driver> = {

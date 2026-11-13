@@ -1,4 +1,5 @@
 import { router, useLocalSearchParams } from "expo-router";
+import { errorText } from "../../src/services/http";
 import React, { useState } from "react";
 import { KeyboardAvoidingView, Platform, Pressable, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -51,7 +52,7 @@ export default function EnterPin() {
       const r = await sendSignInCode(phone, { forgotPin: true });
       router.push({ pathname: "/(auth)/verify", params: { phone, delivery: r.delivery, phoneName: r.phoneName ?? phoneName ?? "", forgot: "1" } });
     } catch (e: any) {
-      setError(e?.message ?? t("Couldn't send the code. Try again."));
+      setError(errorText(e, t("Couldn't send the code. Try again.")));
     } finally {
       setBusy(false);
     }

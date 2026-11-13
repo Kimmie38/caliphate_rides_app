@@ -1,7 +1,10 @@
+import { explainCheckout, openCheckout } from "../../../src/lib/checkout";
+import { appAlert } from "../../../src/components/AppAlert";
+import { errorText } from "../../../src/services/http";
 import { useFocusEffect } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useCallback, useState } from "react";
-import { Alert, KeyboardAvoidingView, Linking, Modal, Platform, Pressable, RefreshControl, ScrollView, TextInput, View } from "react-native";
+import { KeyboardAvoidingView, Modal, Platform, Pressable, RefreshControl, ScrollView, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Icon } from "../../../src/components/Icon";
 import { useTabBarHeight } from "../../../src/components/TabBar";
@@ -82,10 +85,12 @@ export default function Earnings() {
     setPaying(true);
     try {
       const url = await payOwed();
-      if (url) await Linking.openURL(url); // payment checkout; the balance updates when the payment provider confirms
+      // Inside the app; the balance updates once the payment provider confirms.
+      const result = url ? await openCheckout(url) : "success";
       await load();
+      if (url) explainCheckout(result, t("Thank you. Your balance is updated."));
     } catch (e: any) {
-      Alert.alert(t("Payment didn't start"), e?.message ?? t("Try again in a moment."));
+      appAlert(t("Payment didn't start"), errorText(e, t("Try again in a moment.")));
     } finally {
       setPaying(false);
     }
@@ -112,7 +117,7 @@ export default function Earnings() {
             <Txt style={{ flex: 1, color: colors.amberText }}>{wallet.bank.problem}</Txt>
           </View>
           <Button title={t("Check my account again")} variant="quiet" onPress={async () => {
-            try { await recheckBank(); await load(); } catch (e: any) { Alert.alert(t("Couldn't check the account"), e?.message ?? t("Try again later.")); }
+            try { await recheckBank(); await load(); } catch (e: any) { appAlert(t("Couldn't check the account"), errorText(e, t("Try again later."))); }
           }} />
         </View>
       ) : null}
@@ -260,9 +265,9 @@ function WithdrawSheet({ open, wallet, bankName, onClose, onDone }: { open: bool
       await withdraw(amount, bankName);
       setText("");
       onDone();
-      Alert.alert(t("Withdrawal on its way"), t("{0} is being sent to {1} ••{2}. It usually arrives in a few minutes.", formatNaira(amount), bankName, wallet.bank.accountEnding));
+      appAlert(t("Withdrawal on its way"), t("{0} is being sent to {1} ••{2}. It usually arrives in a few minutes.", formatNaira(amount), bankName, wallet.bank.accountEnding));
     } catch (e: any) {
-      setError(e?.message ?? t("That didn't work. Try again in a moment."));
+      setError(errorText(e, t("That didn't work. Try again in a moment.")));
     } finally {
       setBusy(false);
     }

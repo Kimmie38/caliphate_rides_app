@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { Alert, Platform, ScrollView, View } from "react-native";
+import { appAlert } from "../components/AppAlert";
+import { errorText } from "../services/http";
+import { Platform, ScrollView, View } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Icon, type IconName } from "../components/Icon";
@@ -36,7 +38,7 @@ export function DeleteAccountScreen({ back, beforeSignOut }: { back: "/settings"
       beforeSignOut?.();
       await signOut(); // the app returns to the welcome screen by itself
     } catch (e: any) {
-      setError(e?.message ?? t("Couldn't delete your account. Check your connection and try again."));
+      setError(errorText(e, t("Couldn't delete your account. Check your connection and try again.")));
       setBusy(false);
     }
   };
@@ -44,12 +46,10 @@ export function DeleteAccountScreen({ back, beforeSignOut }: { back: "/settings"
   const confirm = () => {
     const title = t("Delete your account?");
     const message = t("This can't be undone.");
-    // Phones show a native dialog; the web preview has no dialogs, so it goes straight ahead.
-    if (Platform.OS === "web") return remove();
-    Alert.alert(title, message, [
+    appAlert(title, message, [
       { text: t("Cancel"), style: "cancel" },
-      { text: t("Delete"), style: "destructive", onPress: remove },
-    ]);
+      { text: t("Delete my account"), style: "destructive", onPress: remove },
+    ], { icon: "alert" });
   };
 
   return (
@@ -62,7 +62,7 @@ export function DeleteAccountScreen({ back, beforeSignOut }: { back: "/settings"
       <Animated.View entering={FadeInDown.duration(300)} style={{ gap: 14 }}>
         <Card style={{ gap: 12 }}>
           <Txt variant="heading">{t("What we delete")}</Txt>
-          <Point icon="person" text={t("Your name, phone number and email")} />
+          <Point icon="person" text={t("Your name and phone number")} />
           <Point icon="idcard" text={t("If you drive: your ID number, address, guarantor, bank details and document photos")} />
           <Point icon="logout" text={t("You're signed out on every phone")} />
         </Card>

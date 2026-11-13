@@ -1,6 +1,8 @@
 import { router } from "expo-router";
+import { appAlert } from "../../src/components/AppAlert";
+import { errorText } from "../../src/services/http";
 import React, { useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Alert, Linking, Platform, View } from "react-native";
+import { ActivityIndicator, Linking, Platform, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Pill } from "../../src/driver/components/form";
 import { DriverMarker, DropPin, PickupPin, RouteLine } from "../../src/components/map/markers";
@@ -87,7 +89,7 @@ export default function TripScreen() {
   const rider = trip.rider;
   const first = rider.name.split(" ")[0];
   const pay = paymentOption(trip.paymentMethod);
-  const step = async (fn: () => Promise<void>) => { setBusy(true); try { await fn(); } catch (e: any) { Alert.alert(t("Something went wrong"), e?.message ?? t("Try again.")); } finally { setBusy(false); } };
+  const step = async (fn: () => Promise<void>) => { setBusy(true); try { await fn(); } catch (e: any) { appAlert(t("Something went wrong"), errorText(e, t("Try again."))); } finally { setBusy(false); } };
   const toPickupKm = stage === "to_pickup" && live.remainingKm !== null ? live.remainingKm : haversineKm(pos, trip.pickup.location) * 1.3;
   const carAt = live.position ?? pos;
   const carHeading = live.heading ?? position.heading;
@@ -194,7 +196,7 @@ export default function TripScreen() {
                 {bank ? <Txt color="muted" align="center">{bank.bankName} · {bank.accountNumber} · {bank.accountName}</Txt> : null}
                 <Txt variant="caption" color="muted" align="center">{t("Check your bank app or SMS alert, then confirm.")}</Txt>
                 <Button title={t("Transfer received")} onPress={() => step(confirmReceived)} loading={busy} />
-                <Button title={t("It hasn't arrived")} variant="quiet" onPress={() => Alert.alert(t("Transfer not in yet"), t("Transfers can take a few minutes. Ask the rider to show you the debit alert. If it still doesn't arrive, report it from Account → Help and we'll follow up with the rider."))} />
+                <Button title={t("It hasn't arrived")} variant="quiet" onPress={() => appAlert(t("Transfer not in yet"), t("Transfers can take a few minutes. Ask the rider to show you the debit alert. If it still doesn't arrive, report it from Account → Help and we'll follow up with the rider."))} />
               </>
             )}
 

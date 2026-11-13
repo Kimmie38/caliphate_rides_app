@@ -1,6 +1,7 @@
 import * as ImagePicker from "expo-image-picker";
+import { appAlert } from "../../components/AppAlert";
 import React, { useState } from "react";
-import { Alert, FlatList, Image, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, TextInput, View, type TextInputProps } from "react-native";
+import { FlatList, Image, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, TextInput, View, type TextInputProps } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { maskDmy } from "../lib/dates";
 import { useTheme } from "../../theme/ThemeProvider";
@@ -120,7 +121,7 @@ export async function pickPhoto(source: "camera" | "library", selfie = false): P
     if (source === "camera") {
       const perm = await ImagePicker.requestCameraPermissionsAsync();
       if (!perm.granted) {
-        Alert.alert(t("Camera is off"), t("Allow camera access in your phone's settings, or choose a photo from your gallery."));
+        appAlert(t("Camera is off"), t("Allow camera access in your phone's settings, or choose a photo from your gallery."));
         return null;
       }
       const r = await ImagePicker.launchCameraAsync({ mediaTypes: ["images"], quality: 0.6, cameraType: selfie ? ImagePicker.CameraType.front : ImagePicker.CameraType.back });
@@ -129,7 +130,7 @@ export async function pickPhoto(source: "camera" | "library", selfie = false): P
     const r = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ["images"], quality: 0.6 });
     return r.canceled ? null : r.assets[0]?.uri ?? null;
   } catch {
-    Alert.alert(t("Couldn't open the camera"), t("Try again, or choose a photo from your gallery."));
+    appAlert(t("Couldn't open the camera"), t("Try again, or choose a photo from your gallery."));
     return null;
   }
 }

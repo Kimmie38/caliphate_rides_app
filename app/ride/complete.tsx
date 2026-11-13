@@ -1,4 +1,5 @@
 import * as Clipboard from "expo-clipboard";
+import { errorText } from "../../src/services/http";
 import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, View } from "react-native";
@@ -50,14 +51,14 @@ export default function Complete() {
   const change = async (m: PaymentMethod) => {
     setError(null);
     try { await changeActivePayment(m); setChanging(false); }
-    catch (e: any) { setError(e?.message ?? t("Couldn't change the payment method.")); }
+    catch (e: any) { setError(errorText(e, t("Couldn't change the payment method."))); }
   };
 
   const payCard = async () => {
     setPaying(true);
     setError(null);
     try { await payActiveByCard(); }
-    catch (e: any) { setError(e?.message ?? t("Card payment didn't go through. Try again or pay another way.")); }
+    catch (e: any) { setError(errorText(e, t("Card payment didn't go through. Try again or pay another way."))); }
     finally { setPaying(false); }
   };
 

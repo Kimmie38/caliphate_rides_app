@@ -1,4 +1,5 @@
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
+import { errorText } from "../../services/http";
 import { DOCUMENTS, EXPIRY_WARNING_DAYS } from "../config/requirements";
 import { daysUntil } from "../lib/dates";
 import * as svc from "../services/application";
@@ -35,7 +36,7 @@ export function ApplicationProvider({ children }: { children: React.ReactNode })
       setApplication(await svc.getApplication());
       setError(null);
     } catch (e: any) {
-      setError(e?.message ?? t("Couldn't load your application. Check your connection."));
+      setError(errorText(e, t("Couldn't load your application. Check your connection.")));
     } finally {
       setLoading(false);
     }

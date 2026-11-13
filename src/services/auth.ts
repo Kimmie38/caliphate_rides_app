@@ -11,7 +11,7 @@ import { t } from "../i18n";
 // POST /auth/pin/verify   { phone, pin }     -> { token, user, isNewUser: false }
 // POST /me/pin            { pin, currentPin? } -> { user }
 // GET  /me                                    -> { user }
-// PATCH /me               { name?, email?, language? }  -> { user }
+// PATCH /me               { name?, language? }  -> { user }
 
 /**
  * How the code reaches the person: "app" (we show it as a notification; the code is in the reply),
@@ -76,12 +76,12 @@ export async function deleteAccount(): Promise<void> {
   await api("/me", { method: "DELETE" });
 }
 
-export async function getMe(): Promise<User> {
-  const r = await api<{ user: User }>("/me");
+export async function getMe(opts: { timeoutMs?: number } = {}): Promise<User> {
+  const r = await api<{ user: User }>("/me", opts);
   return r.user;
 }
 
-export async function updateProfile(patch: { name?: string; email?: string; language?: "en" | "ha" }, current: User): Promise<User> {
+export async function updateProfile(patch: { name?: string; language?: "en" | "ha" }, current: User): Promise<User> {
   if (ENV.useMock) { await wait(400); if (patch.name) mockNames.set(current.phone || mockPhone, patch.name); return { ...current, ...patch }; }
   const r = await api<{ user: User }>("/me", { method: "PATCH", body: patch });
   return r.user;

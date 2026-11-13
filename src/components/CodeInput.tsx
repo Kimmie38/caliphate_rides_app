@@ -15,7 +15,7 @@ export function CodeInput({ value, onChange, onComplete, length = 6, autoFocus =
   onComplete?: (v: string) => void;
   length?: number;
   autoFocus?: boolean;
-  oneTimeCode?: "sms" | "email";
+  oneTimeCode?: "sms";
   secret?: boolean;
   label?: string;
 }) {
@@ -46,7 +46,7 @@ export function CodeInput({ value, onChange, onComplete, length = 6, autoFocus =
         autoFocus={autoFocus}
         keyboardType="number-pad"
         textContentType={secret ? "none" : "oneTimeCode"}
-        autoComplete={secret ? "off" : oneTimeCode === "sms" ? "sms-otp" : "one-time-code"}
+        autoComplete={secret ? "off" : "sms-otp"}
         secureTextEntry={secret}
         importantForAutofill={secret ? "no" : "auto"}
         maxLength={length}

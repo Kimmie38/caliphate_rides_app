@@ -1,4 +1,5 @@
 import { t } from "../i18n";
+import { ApiError } from "../services/http";
 
 /**
  * The server's PIN messages, in the app's language (the server writes them in English). Keeps the
@@ -14,5 +15,6 @@ export function pinMessage(e: any, fallback: string): string {
     const mins = message.match(/in (\d+) minute/);
     return t("Too many wrong PINs. Try again in {0} minutes, or tap Forgot PIN.", mins?.[1] ?? "30");
   }
-  return message ? t(message) : fallback;
+  // Only the server's own messages are shown; anything else (a network or app error) gets the fallback.
+  return e instanceof ApiError && message ? t(message) : fallback;
 }

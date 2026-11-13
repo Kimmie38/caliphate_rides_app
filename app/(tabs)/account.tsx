@@ -1,6 +1,7 @@
 import { router } from "expo-router";
+import { appAlert } from "../../src/components/AppAlert";
 import React from "react";
-import { Alert, Linking, Pressable, ScrollView, View, Platform } from "react-native";
+import { Linking, Pressable, ScrollView, View, Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTabBarHeight } from "../../src/components/TabBar";
 import { Avatar, SettingRow, tap, Txt } from "../../src/components/ui";
@@ -27,15 +28,15 @@ export default function Account() {
   const { activeRide } = useRide();
   const rideOpen = !!activeRide && !["completed", "cancelled", "no_drivers"].includes(activeRide.status);
   const toDriving = () => rideOpen
-    ? Alert.alert(t("Finish your ride first"), t("You can switch to driving after your current ride ends."))
+    ? appAlert(t("Finish your ride first"), t("You can switch to driving after your current ride ends."))
     : setAppMode("driver");
 
   // The web preview has no dialogs, so it logs out straight away there.
-  const logOut = () => Platform.OS === "web" ? signOut() :
-    Alert.alert(t("Log out?"), t("You'll need your 4-digit PIN to log back in."), [
+  const logOut = () =>
+    appAlert(t("Log out?"), t("You'll need your 4-digit PIN to log back in."), [
       { text: t("Cancel"), style: "cancel" },
       { text: t("Log out"), style: "destructive", onPress: () => { signOut(); } },
-    ]);
+    ], { icon: "logout" });
 
   return (
     <ScrollView style={{ flex: 1, backgroundColor: colors.canvas }} contentContainerStyle={{ paddingTop: insets.top + 20, paddingHorizontal: 20, paddingBottom: tabH + 24, gap: 18 }}>
@@ -69,9 +70,9 @@ export default function Account() {
       <Group>
         <SettingRow icon="home" title={t("Home")} tone="green" detail={saved.home?.name ?? t("Set your home address")} onPress={() => router.push({ pathname: "/ride/search", params: { saveAs: "home" } })} />
         <SettingRow icon="work" title={t("Work")} tone="gov" detail={saved.work?.name ?? t("Set your work address")} onPress={() => router.push({ pathname: "/ride/search", params: { saveAs: "work" } })} />
-        <SettingRow icon="user" title={t("Profile")} tone="green" detail={t("Name, email and phone")} onPress={() => router.push("/profile")} />
+        <SettingRow icon="user" title={t("Profile")} tone="green" detail={t("Name and phone number")} onPress={() => router.push("/profile")} />
         <SettingRow icon="settings" title={t("Settings")} tone="school" detail={t("Language: {0} · Appearance", lang === "ha" ? "Hausa" : "English")} onPress={() => router.push("/settings")} />
-        <SettingRow icon="people" title={t("Trusted contacts")} tone="health" detail={t("Family who can follow your trips live")} onPress={() => Alert.alert(t("Trusted contacts"), t("Adding contacts arrives with the backend. For now, use Share trip during a ride."))} />
+        <SettingRow icon="people" title={t("Trusted contacts")} tone="health" detail={t("Family who can follow your trips live")} onPress={() => appAlert(t("Trusted contacts"), t("Adding contacts arrives with the backend. For now, use Share trip during a ride."))} />
       </Group>
       <Group>
         <SettingRow icon="help" title={t("Help")} tone="mosque" detail={t("Call support on {0}", BRAND.supportPhone)} onPress={() => Linking.openURL(`tel:${BRAND.supportPhone.replace(/\s/g, "")}`)} />

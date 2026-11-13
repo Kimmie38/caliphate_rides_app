@@ -1,4 +1,5 @@
 import { router } from "expo-router";
+import { errorText } from "../../../src/services/http";
 import { goBack } from "../../../src/lib/nav";
 import React, { useEffect, useState } from "react";
 import { Pressable, View } from "react-native";
@@ -37,7 +38,7 @@ export default function Review() {
     setBusy(true);
     setError(null);
     try { await submit(signature.trim() || a.personal.fullName); } // the app moves to the application status screen by itself
-    catch (e: any) { setError(e?.message ?? t("Couldn't submit. Check your connection and try again.")); }
+    catch (e: any) { setError(errorText(e, t("Couldn't submit. Check your connection and try again."))); }
     finally { setBusy(false); }
   };
 
@@ -79,7 +80,6 @@ export default function Review() {
         <Section title={t("Vehicle owner")} onEdit={() => router.push("/driver/onboarding/vehicle")}>
           <Row k="Name" v={a.owner?.fullName ?? ""} />
           <Row k="Phone" v={normalizeNgPhone(a.owner?.phone ?? "") ? formatNgPhone(normalizeNgPhone(a.owner!.phone)!) : a.owner?.phone ?? ""} />
-          <Row k="Email" v={a.owner?.email ?? ""} />
           <Row k="Address" v={a.owner?.address ?? ""} />
         </Section>
       ) : null}

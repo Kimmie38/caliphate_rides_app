@@ -1,8 +1,10 @@
-import * as Application from "expo-application";
-import { CryptoDigestAlgorithm, digestStringAsync, getRandomBytes } from "expo-crypto";
-import * as Device from "expo-device";
 import { Platform } from "react-native";
+import { optional } from "./optional";
 import { secureStore } from "./secureStore";
+
+const Application = optional(() => require("expo-application") as typeof import("expo-application"));
+const Crypto = optional(() => require("expo-crypto") as typeof import("expo-crypto"));
+const Device = optional(() => require("expo-device") as typeof import("expo-device"));
 
 // An ID for this phone that the server uses to recognise phones an account has used before.
 //  - Android: made from Android's own ID for this app, which stays the same when the app is deleted
@@ -14,7 +16,7 @@ const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789
 /** 32 characters from the phone's secure random generator (Android, iPhone and web). */
 function randomId(): string {
   let bytes: Uint8Array;
-  try { bytes = getRandomBytes(32); }
+  try { bytes = Crypto!.getRandomBytes(32); }
   catch {
     bytes = new Uint8Array(32);
     for (let i = 0; i < bytes.length; i++) bytes[i] = Math.floor(Math.random() * 256);
@@ -23,9 +25,9 @@ function randomId(): string {
 }
 
 async function androidId(): Promise<string> {
-  const raw = Application.getAndroidId();
-  if (!raw) return "";
-  return digestStringAsync(CryptoDigestAlgorithm.SHA256, `caliphate-rides:${raw}`); // 64 hex characters
+  const raw = Application?.getAndroidId?.();
+  if (!raw || !Crypto) return "";
+  return Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, `caliphate-rides:${raw}`); // 64 hex characters
 }
 
 async function load(): Promise<string> {
@@ -52,7 +54,7 @@ export const deviceId = () => (pending ??= load());
 
 /** The phone's make and model, e.g. "Tecno Spark 10 Pro" or "iPhone 13" ("" if unknown). */
 export function deviceName(): string {
-  if (Platform.OS === "web") return "";
+  if (Platform.OS === "web" || !Device) return "";
   const model = (Device.modelName ?? "").trim();
   const brand = (Device.brand ?? Device.manufacturer ?? "").trim();
   if (!model) return brand;

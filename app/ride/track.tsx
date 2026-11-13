@@ -1,6 +1,8 @@
 import { router } from "expo-router";
+import { appAlert } from "../../src/components/AppAlert";
+import { errorText } from "../../src/services/http";
 import React, { useEffect, useRef, useState } from "react";
-import { Alert, Linking, Share, View } from "react-native";
+import { Linking, Share, View } from "react-native";
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withRepeat, withTiming } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { KnotMark } from "../../src/components/Knot";
@@ -85,18 +87,18 @@ export default function Track() {
       ? t("I'm on a {0} trip to {1} with {2} ({3}). Follow it live: {4}/{5}", BRAND.name, ride.destination.name, driver.name, driver.vehicle.plate, ENV.shareBaseUrl, ride.id)
       : t("I'm on a {0} trip to {1}. Follow it live: {2}/{3}", BRAND.name, ride.destination.name, ENV.shareBaseUrl, ride.id) });
   const safety = () =>
-    Alert.alert(t("Safety"), t("If you're in danger, call 112 now."), [
+    appAlert(t("Safety"), t("If you're in danger, call 112 now."), [
       { text: t("Call 112"), style: "destructive", onPress: () => Linking.openURL("tel:112") },
       { text: t("Share trip with family"), onPress: shareTrip },
       { text: t("Close"), style: "cancel" },
-    ]);
+    ], { icon: "shield", tone: "danger" });
   const cancel = () =>
-    Alert.alert(t("Cancel this ride?"), status === "searching" ? t("We'll stop looking for a driver.") : t("Your driver is already on the way."), [
+    appAlert(t("Cancel this ride?"), status === "searching" ? t("We'll stop looking for a driver.") : t("Your driver is already on the way."), [
       { text: t("Keep ride"), style: "cancel" },
       { text: t("Cancel ride"), style: "destructive", onPress: async () => {
         setCancelling(true);
         try { await cancelActiveRide(); router.replace("/(tabs)"); }
-        catch (e: any) { Alert.alert(t("Couldn't cancel"), e?.message ?? t("Try again.")); }
+        catch (e: any) { appAlert(t("Couldn't cancel"), errorText(e, t("Try again."))); }
         finally { setCancelling(false); }
       } },
     ]);

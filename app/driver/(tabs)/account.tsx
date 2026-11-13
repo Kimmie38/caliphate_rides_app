@@ -1,6 +1,7 @@
 import { router } from "expo-router";
+import { appAlert } from "../../../src/components/AppAlert";
 import React from "react";
-import { Alert, Linking, Pressable, ScrollView, View } from "react-native";
+import { Linking, Pressable, ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTabBarHeight } from "../../../src/components/TabBar";
 import { Avatar, Plate, SettingRow, tap, Txt } from "../../../src/components/ui";
@@ -26,15 +27,15 @@ export default function Account() {
   const { goOffline, trip } = useDriving();
   const { setMode: setAppMode } = useMode();
   const toRiding = () => trip
-    ? Alert.alert(t("Finish your trip first"), t("You can switch to riding after this trip ends."))
+    ? appAlert(t("Finish your trip first"), t("You can switch to riding after this trip ends."))
     : (goOffline(), setAppMode("rider"));
   const a = application;
 
   const logOut = () =>
-    Alert.alert(t("Log out?"), t("You'll go offline and need your 4-digit PIN to log back in."), [
+    appAlert(t("Log out?"), t("You'll go offline and need your 4-digit PIN to log back in."), [
       { text: t("Cancel"), style: "cancel" },
       { text: t("Log out"), style: "destructive", onPress: () => { goOffline(); signOut(); } },
-    ]);
+    ], { icon: "logout" });
 
   return (
     <ScrollView style={{ flex: 1, backgroundColor: colors.canvas }} contentContainerStyle={{ paddingTop: insets.top + 20, paddingHorizontal: 20, paddingBottom: tabH + 24, gap: 18 }}>
@@ -72,13 +73,13 @@ export default function Account() {
         <SettingRow icon="ribbon" tone="green" title={t("Official driver record")} detail={a?.recordId} onPress={() => router.push("/driver/application")} />
         <SettingRow icon="document" tone="school" title={t("Documents and licence")} detail={t("Update your licence and vehicle papers")} onPress={() => router.navigate("/driver/documents")} />
         <SettingRow icon="wallet" tone="gov" title={t("Payout account")} detail={a ? `${a.bank.bankName} · ${a.bank.accountNumber}` : ""}
-          onPress={() => Alert.alert(t("Payout account"), t("To change your payout account, call support. We verify bank changes to protect your earnings."))} />
+          onPress={() => appAlert(t("Payout account"), t("To change your payout account, call support. We verify bank changes to protect your earnings."))} />
       </Group>
       <Group>
         <SettingRow icon="help" tone="mosque" title={t("Help")} detail={t("Call driver support on {0}", BRAND.supportPhone)} onPress={() => Linking.openURL(`tel:${BRAND.supportPhone.replace(/\s/g, "")}`)} />
         {ENV.useMock ? (
           <SettingRow icon="refresh" tone="transport" title={t("Start sign-up again")} detail={t("Sample mode only: clears your sample application")}
-            onPress={() => Alert.alert(t("Start again?"), t("This clears your sample application so you can go through sign-up again."), [
+            onPress={() => appAlert(t("Start again?"), t("This clears your sample application so you can go through sign-up again."), [
               { text: t("Cancel"), style: "cancel" },
               { text: t("Start again"), style: "destructive", onPress: () => { goOffline(); resetMock(); } },
             ])} />

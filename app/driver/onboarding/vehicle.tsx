@@ -64,7 +64,6 @@ export default function VehicleDetails() {
           </View>
           <Field label={t("Owner's full name")} value={owner.fullName} onChangeText={(t) => setOwner({ fullName: t })} autoCapitalize="words" error={ownerErrors.fullName} placeholder={t("As on their ID")} />
           <Field label={t("Owner's phone number")} value={owner.phone} onChangeText={(t) => setOwner({ phone: t })} keyboardType="phone-pad" error={ownerErrors.phone} placeholder="803 214 5567" />
-          <Field label={t("Owner's email address")} value={owner.email} onChangeText={(t) => setOwner({ email: t.trim() })} keyboardType="email-address" autoCapitalize="none" autoCorrect={false} error={ownerErrors.email} placeholder={t("name@example.com")} />
           <Field label={t("Owner's house address")} value={owner.address} onChangeText={(t) => setOwner({ address: t })} autoCapitalize="words" error={ownerErrors.address} placeholder={t("Street, area, town")} multiline />
         </View>
       ) : null}

@@ -1,4 +1,5 @@
 import { router } from "expo-router";
+import { errorText } from "../../src/services/http";
 import { goBack } from "../../src/lib/nav";
 import React, { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Pressable, View } from "react-native";
@@ -66,7 +67,7 @@ export default function Confirm() {
       await ride.requestRide();
       router.replace("/ride/track");
     } catch (e: any) {
-      setError(e?.message ?? t("Couldn't request the ride. Try again."));
+      setError(errorText(e, t("Couldn't request the ride. Try again.")));
     } finally {
       setSubmitting(false);
     }

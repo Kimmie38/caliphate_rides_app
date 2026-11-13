@@ -1,4 +1,5 @@
 import * as Location from "expo-location";
+import { UserMessage } from "./http";
 import { ENV } from "../config/env";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { landmarks, setPlaces, type Landmark } from "../data/landmarks";
@@ -118,7 +119,7 @@ export async function resolvePlace(place: Place): Promise<Place> {
   const url = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${place.googlePlaceId}&fields=geometry&key=${ENV.googleMapsKey}`;
   const json = await (await fetch(url)).json();
   const loc = json?.result?.geometry?.location;
-  if (!loc) throw new Error(t("Couldn't find that place on the map. Try another search or drop a pin."));
+  if (!loc) throw new UserMessage(t("Couldn't find that place on the map. Try another search or drop a pin."));
   return { ...place, location: { latitude: loc.lat, longitude: loc.lng }, googlePlaceId: undefined };
 }
 

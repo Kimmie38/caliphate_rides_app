@@ -1,5 +1,7 @@
+import { explainCheckout, openCheckout } from "../lib/checkout";
+import { errorText } from "../services/http";
+import { UserMessage } from "../services/http";
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
-import { Linking } from "react-native";
 import { DEFAULT_PRICING, type PricingConfig, type RideTypeId } from "../lib/pricing";
 import { getPricing } from "../services/config";
 import { loadServerPlaces } from "../services/places";
@@ -91,7 +93,7 @@ export function RideProvider({ children }: { children: React.ReactNode }) {
       if (q.length && !q.some((x) => x.rideType === rideType)) setRideType(q[0].rideType);
       setQuotesStatus("ready");
     } catch (e: any) {
-      setQuotesError(e?.message ?? "Couldn't work out the fare. Try again.");
+      setQuotesError(errorText(e, "Couldn't work out the fare. Try again."));
       setQuotesStatus("error");
     }
   }, [pickup, destination, refreshPricing, rideType]);
@@ -99,7 +101,7 @@ export function RideProvider({ children }: { children: React.ReactNode }) {
   const selectedQuote = quotes.find((q) => q.rideType === rideType) ?? null;
 
   const requestRide = useCallback(async () => {
-    if (!pickup || !destination || !selectedQuote) throw new Error(t("Choose a pickup and destination first."));
+    if (!pickup || !destination || !selectedQuote) throw new UserMessage(t("Choose a pickup and destination first."));
     const ride = await rides.requestRide({ pickup, destination, rideType, paymentMethod: payment, quote: selectedQuote });
     setDriverPosition(null);
     setActiveRide(ride);
@@ -145,8 +147,11 @@ export function RideProvider({ children }: { children: React.ReactNode }) {
   const payActiveByCard = useCallback(async () => {
     if (!activeRide) return;
     const url = await rides.payByCard(activeRide);
-    if (url) await Linking.openURL(url); // the server marks the ride paid when the payment provider confirms (ride:updated)
-    else setActiveRide((r) => (r ? { ...r, paymentMethod: "card", paymentStatus: "paid" } : r));
+    if (!url) return setActiveRide((r) => (r ? { ...r, paymentMethod: "card", paymentStatus: "paid" } : r));
+    // Inside the app; the server marks the ride paid once the payment provider confirms (ride:updated).
+    const result = await openCheckout(url);
+    if (result === "success") setActiveRide((r) => (r ? { ...r, paymentMethod: "card", paymentStatus: "paid" } : r));
+    else explainCheckout(result, "");
   }, [activeRide]);
 
   const finishRide = useCallback(() => {

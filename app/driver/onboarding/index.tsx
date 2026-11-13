@@ -73,7 +73,7 @@ export default function ChooseVehicle() {
         <View style={{ backgroundColor: colors.mist, borderRadius: 14, padding: 14, gap: 4 }}>
           <Txt variant="bodyStrong">{t("You'll need the owner's details")}</Txt>
           <Txt variant="caption" color="muted">
-            {t("The owner's name, phone number, email and address, a letter signed by the owner allowing you to drive the vehicle for Caliphate Rides, and a photo of the owner's government ID. This protects you and the owner if the vehicle is ever stolen or misused.")}
+            {t("The owner's name, phone number and address, a letter signed by the owner allowing you to drive the vehicle for Caliphate Rides, and a photo of the owner's government ID. This protects you and the owner if the vehicle is ever stolen or misused.")}
           </Txt>
         </View>
       ) : null}

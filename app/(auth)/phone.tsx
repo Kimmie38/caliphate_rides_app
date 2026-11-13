@@ -1,4 +1,5 @@
 import { router } from "expo-router";
+import { errorText } from "../../src/services/http";
 import React, { useEffect, useRef, useState } from "react";
 import { Keyboard, KeyboardAvoidingView, Platform, ScrollView, TextInput, useWindowDimensions, View } from "react-native";
 import Animated, { Easing, FadeIn, FadeInDown, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
@@ -61,7 +62,7 @@ export default function PhoneSignIn() {
       if (r.delivery === "pin") router.push({ pathname: "/(auth)/pin", params: { phone, phoneName: r.phoneName ?? "" } });
       else router.push({ pathname: "/(auth)/verify", params: { phone, delivery: r.delivery, phoneName: r.phoneName ?? "" } });
     } catch (e: any) {
-      setError(e?.message ?? t("Couldn't send the code. Try again."));
+      setError(errorText(e, t("Couldn't send the code. Try again.")));
     } finally {
       setLoading(false);
     }

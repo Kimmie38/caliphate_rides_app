@@ -20,7 +20,6 @@ export type Place = {
 
 export type User = {
   id: string; phone: string; name: string; rating?: number;
-  email?: string;
   /** Has a 4-digit sign-in PIN. */
   hasPin?: boolean;
   /** Signed in but hasn't created a PIN yet: the app asks for one before going on. */

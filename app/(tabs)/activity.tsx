@@ -1,4 +1,5 @@
 import { router, useFocusEffect } from "expo-router";
+import { errorText } from "../../src/services/http";
 import React, { useCallback, useMemo, useState } from "react";
 import { LayoutAnimation, Platform, Pressable, RefreshControl, ScrollView, UIManager, View } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
@@ -44,7 +45,7 @@ export default function Activity() {
 
   const load = useCallback(async () => {
     try { setTrips(await getHistory()); setError(null); }
-    catch (e: any) { setError(e?.message ?? t("Couldn't load your trips.")); }
+    catch (e: any) { setError(errorText(e, t("Couldn't load your trips."))); }
   }, []);
   useFocusEffect(useCallback(() => { load(); }, [load]));
 

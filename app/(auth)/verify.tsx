@@ -1,4 +1,5 @@
 import { useLocalSearchParams } from "expo-router";
+import { errorText } from "../../src/services/http";
 import { goBack } from "../../src/lib/nav";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { AppState, KeyboardAvoidingView, Platform, Pressable, TextInput, View } from "react-native";
@@ -55,7 +56,7 @@ export default function Verify() {
       // Signing in opens the next screen automatically (name screen for new riders, otherwise home).
       await signIn(r.token, r.user);
     } catch (e: any) {
-      setError(e?.message ?? t("That code didn't work. Check it and try again."));
+      setError(errorText(e, t("That code didn't work. Check it and try again.")));
       setCode("");
     } finally {
       setLoading(false);
@@ -80,7 +81,7 @@ export default function Verify() {
       setDelivery(r.delivery);
       if (r.phoneName) setPhoneName(r.phoneName);
       setBlocked(codeWaiting(phone));
-    } catch (e: any) { setError(e?.message ?? t("Couldn't resend the code.")); }
+    } catch (e: any) { setError(errorText(e, t("Couldn't resend the code."))); }
   };
 
   return (

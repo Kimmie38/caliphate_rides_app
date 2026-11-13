@@ -1,6 +1,8 @@
 import { router, useFocusEffect } from "expo-router";
+import { appAlert } from "../../../src/components/AppAlert";
+import { errorText } from "../../../src/services/http";
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { Alert, Linking, Pressable, View } from "react-native";
+import { Linking, Pressable, View } from "react-native";
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withRepeat, withTiming } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Icon } from "../../../src/components/Icon";
@@ -56,7 +58,7 @@ export default function Drive() {
   }, [d.request?.id, sheetH, d.position.location.latitude, d.position.location.longitude]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    if (d.notice) { Alert.alert(t("Trip cancelled"), d.notice); d.clearNotice(); }
+    if (d.notice) { appAlert(t("Trip cancelled"), d.notice); d.clearNotice(); }
   }, [d.notice]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Going offline automatically if a document stops being valid.
@@ -64,14 +66,14 @@ export default function Drive() {
 
   const goOnline = () => {
     if (blockers.length) {
-      Alert.alert(t("You can't go online yet"), blockers.map((b) => `${t(b.title)}: ${t(b.reason)}`).join("\n"), [
+      appAlert(t("You can't go online yet"), blockers.map((b) => `${t(b.title)}: ${t(b.reason)}`).join("\n"), [
         { text: t("Close"), style: "cancel" },
         { text: t("Update"), onPress: () => router.push({ pathname: "/driver/document/[kind]", params: { kind: blockers[0].kind } }) },
       ]);
       return;
     }
     if (d.locationStatus === "denied") {
-      Alert.alert(t("Turn on location"), t("Riders can only find you when your location is on."), [
+      appAlert(t("Turn on location"), t("Riders can only find you when your location is on."), [
         { text: t("Close"), style: "cancel" },
         { text: t("Open settings"), onPress: () => Linking.openSettings() },
       ]);
@@ -83,7 +85,7 @@ export default function Drive() {
   const accept = async () => {
     setAccepting(true);
     try { await d.accept(); router.push("/driver/trip"); }
-    catch (e: any) { Alert.alert(t("Couldn't accept"), e?.message ?? t("The rider may have cancelled.")); }
+    catch (e: any) { appAlert(t("Couldn't accept"), errorText(e, t("The rider may have cancelled."))); }
     finally { setAccepting(false); }
   };
 
