@@ -1,6 +1,6 @@
 import { router } from "expo-router";
 import React from "react";
-import { Alert, Linking, Pressable, ScrollView, View } from "react-native";
+import { Alert, Linking, Pressable, ScrollView, View, Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTabBarHeight } from "../../src/components/TabBar";
 import { Avatar, SettingRow, tap, Txt } from "../../src/components/ui";
@@ -30,8 +30,9 @@ export default function Account() {
     ? Alert.alert(t("Finish your ride first"), t("You can switch to driving after your current ride ends."))
     : setAppMode("driver");
 
-  const logOut = () =>
-    Alert.alert(t("Log out?"), t("You'll need a code sent to your phone to log back in."), [
+  // The web preview has no dialogs, so it logs out straight away there.
+  const logOut = () => Platform.OS === "web" ? signOut() :
+    Alert.alert(t("Log out?"), t("You'll need your 4-digit PIN to log back in."), [
       { text: t("Cancel"), style: "cancel" },
       { text: t("Log out"), style: "destructive", onPress: () => { signOut(); } },
     ]);

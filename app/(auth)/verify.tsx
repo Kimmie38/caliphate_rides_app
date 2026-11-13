@@ -21,9 +21,12 @@ const LEN = 6;
 
 export default function Verify() {
   useI18n();
-  const params = useLocalSearchParams<{ phone: string; delivery?: CodeDelivery; code?: string }>();
+  // forgot = "1": they tapped Forgot PIN. phoneName: the phone this number was last used on.
+  const params = useLocalSearchParams<{ phone: string; delivery?: CodeDelivery; code?: string; phoneName?: string; forgot?: string }>();
   const phone = params.phone;
+  const forgot = params.forgot === "1";
   const [delivery, setDelivery] = useState<CodeDelivery>(params.delivery ?? "sms");
+  const [phoneName, setPhoneName] = useState(params.phoneName ?? "");
   // Notifications are off: the code waits until they're turned on (it's never shown in the app).
   const [blocked, setBlocked] = useState(() => codeWaiting(phone));
   const { colors } = useTheme();
@@ -73,7 +76,9 @@ export default function Verify() {
     setSeconds(60);
     setError(null);
     try {
-      setDelivery(await sendSignInCode(phone));
+      const r = await sendSignInCode(phone, { forgotPin: forgot });
+      setDelivery(r.delivery);
+      if (r.phoneName) setPhoneName(r.phoneName);
       setBlocked(codeWaiting(phone));
     } catch (e: any) { setError(e?.message ?? t("Couldn't resend the code.")); }
   };
@@ -82,7 +87,7 @@ export default function Verify() {
     <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1, backgroundColor: colors.paper }}>
       <View style={{ flex: 1, paddingHorizontal: 24, paddingTop: insets.top + 16, paddingBottom: insets.bottom + 24, gap: 14 }}>
         <IconButton name="back" label={t("Back")} onPress={() => goBack("/(auth)/welcome")} size={44} style={{ borderRadius: 14 }} />
-        <Txt variant="hero" style={{ marginTop: 8 }}>{t("Enter the code")}</Txt>
+        <Txt variant="hero" style={{ marginTop: 8 }}>{forgot ? t("Reset your PIN") : t("Enter the code")}</Txt>
         <Txt color="muted">
           {delivery === "app" && blocked ? t("We send your code as a notification, but notifications are off for Caliphate Rides on this phone.")
             : delivery === "app" ? t("We sent your code to this phone as a notification. Pull down from the top of the screen to see it.")
@@ -90,7 +95,8 @@ export default function Verify() {
             : t("Sent to {0}", phone ? formatNgPhone(phone) : t("your phone"))}
         </Txt>
         {delivery === "app" && blocked ? <TurnOnNotifications onAllowed={() => setBlocked(false)} onFailed={setError} phone={phone} /> : null}
-        {delivery === "support" ? <SupportNote /> : null}
+        {delivery === "support" ? <SupportNote phoneName={phoneName} /> : null}
+        {forgot && delivery === "app" && !blocked ? <Txt variant="caption" color="muted">{t("After the code, you'll create a new PIN.")}</Txt> : null}
 
         <Pressable onPress={() => input.current?.focus()} accessibilityLabel={t("Verification code")} style={{ flexDirection: "row", gap: 8, marginTop: 8 }}>
           {Array.from({ length: LEN }).map((_, i) => {
@@ -183,11 +189,11 @@ function TurnOnNotifications({ phone, onAllowed, onFailed }: { phone: string; on
 }
 
 /** This number already has an account on other phones: support confirms it's them before giving the code. */
-function SupportNote() {
+function SupportNote({ phoneName }: { phoneName?: string }) {
   const { colors } = useTheme();
   return (
     <View style={{ gap: 6, padding: 14, borderRadius: 18, backgroundColor: colors.greenSoft }}>
-      <Txt variant="bodyStrong">{t("This number is already used on another phone")}</Txt>
+      <Txt variant="bodyStrong">{phoneName ? t("This number is set up on a {0}", phoneName) : t("This number is already used on another phone")}</Txt>
       <Txt>{t("To keep your account safe, call support on {0}. We'll call your number back and read you the code.", BRAND.supportPhone)}</Txt>
     </View>
   );

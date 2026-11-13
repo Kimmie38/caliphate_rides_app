@@ -11,7 +11,8 @@ const PHOTOS_WHY = "Caliphate Rides lets drivers choose photos of their licence 
 
 const config: ExpoConfig = {
   name: "Caliphate Rides",
-  slug: "caliphate-rides",
+  owner: "caliphate-rides",
+  slug: "caliphate-rides-0kso11hfnmtvioxikek8b",
   // Links this folder to the project on expo.dev (EAS can't write it into a .ts config itself).
   extra: { eas: { projectId: "035806e1-4dbe-4177-acac-d4ef6ef079e9" } },
   scheme: "caliphaterides",

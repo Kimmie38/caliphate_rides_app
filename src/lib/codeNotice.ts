@@ -2,7 +2,7 @@ import * as Notifications from "expo-notifications";
 import { Linking, Platform } from "react-native";
 import { BRAND } from "../config/brand";
 import { t } from "../i18n";
-import { requestOtp, type CodeDelivery } from "../services/auth";
+import { requestOtp, type OtpRequest } from "../services/auth";
 
 // Shows a sign-in code from the server as a notification on this phone (SMS_PROVIDER=app).
 // The code is only ever shown in the notification, never inside the app. If notifications are off,
@@ -113,11 +113,11 @@ export async function showCode(phone: string, code: string): Promise<boolean> {
  * Asks the server for a sign-in code for this number and, when the server hands it to the app,
  * shows it as a notification. Returns how the code was delivered.
  */
-export async function sendSignInCode(phone: string): Promise<CodeDelivery> {
-  const r = await requestOtp(phone);
-  if (__DEV__) console.log("[sign-in code] server sent it by:", r.delivery);
+export async function sendSignInCode(phone: string, opts: { forgotPin?: boolean } = {}): Promise<Omit<OtpRequest, "code">> {
+  const r = await requestOtp(phone, opts);
+  if (__DEV__) console.log("[sign-in code] server answered:", r.delivery);
   if (r.delivery === "app" && r.code) await showCode(phone, r.code);
-  return r.delivery;
+  return { expiresIn: r.expiresIn, delivery: r.delivery, phoneName: r.phoneName }; // the code itself never goes to a screen
 }
 
 /** Removes the code notification (after signing in, or when a new code replaces it). */

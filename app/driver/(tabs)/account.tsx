@@ -31,7 +31,7 @@ export default function Account() {
   const a = application;
 
   const logOut = () =>
-    Alert.alert(t("Log out?"), t("You'll go offline and need a code sent to your phone to log back in."), [
+    Alert.alert(t("Log out?"), t("You'll go offline and need your 4-digit PIN to log back in."), [
       { text: t("Cancel"), style: "cancel" },
       { text: t("Log out"), style: "destructive", onPress: () => { goOffline(); signOut(); } },
     ]);

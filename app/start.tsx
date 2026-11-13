@@ -26,7 +26,7 @@ export default function Start() {
   return (
     <View style={{ flex: 1, backgroundColor: colors.canvas, paddingTop: insets.top + 28, paddingHorizontal: 20, paddingBottom: insets.bottom + 20, gap: 16 }}>
       <KnotTile size={52} />
-      <Txt variant="hero" style={{ marginTop: 8 }}>{t("Sannu, {0}. How do you want to use Caliphate Rides?", first)}</Txt>
+      <Txt variant="hero" style={{ marginTop: 8 }}>{t("Hello, {0}. How do you want to use Caliphate Rides?", first)}</Txt>
 
       <Animated.View entering={FadeInDown.duration(450).delay(100)}>
         <Pressable accessibilityRole="button" accessibilityLabel={t("Ride. Book a keke or car around your city.")} onPress={() => choose("rider")}

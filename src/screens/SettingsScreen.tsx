@@ -106,6 +106,8 @@ export function SettingsScreen({ who, back }: { who: "rider" | "driver"; back: "
       <Animated.View entering={FadeInDown.duration(350).delay(180)} style={{ gap: 10 }}>
         <Txt variant="heading">{t("Your account")}</Txt>
         <Group>
+          <SettingRow icon="lock" title={t("Sign-in PIN")} detail={t("Change the 4-digit PIN you sign in with")}
+            onPress={() => router.push(who === "driver" ? "/driver/change-pin" : "/change-pin")} />
           <SettingRow icon="close" danger title={t("Delete account")} detail={t("Remove your account and personal details")}
             onPress={() => router.push(who === "driver" ? "/driver/delete-account" : "/delete-account")} />
         </Group>

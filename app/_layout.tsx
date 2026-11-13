@@ -59,7 +59,8 @@ function Root({ fontsLoaded }: { fontsLoaded: boolean }) {
   const ready = fontsLoaded && status !== "loading" && modeReady && langReady;
   const signedIn = status === "signedIn";
   const hasName = !!user?.name;
-  const set = signedIn && hasName; // ready to choose, ride or drive
+  const needsPin = !!user?.needsPin; // first sign-in (or after "Forgot PIN"): create the PIN before going on
+  const set = signedIn && hasName && !needsPin; // ready to choose, ride or drive
 
   useEffect(() => {
     if (ready) SplashScreen.hideAsync().catch(() => {});
@@ -88,6 +89,7 @@ function Root({ fontsLoaded }: { fontsLoaded: boolean }) {
           <Stack.Screen name="profile" />
           <Stack.Screen name="settings" />
           <Stack.Screen name="delete-account" />
+          <Stack.Screen name="change-pin" />
         </Stack.Protected>
         <Stack.Protected guard={set && mode === "driver"}>
           <Stack.Screen name="driver" options={{ animation: "fade" }} />
@@ -97,6 +99,9 @@ function Root({ fontsLoaded }: { fontsLoaded: boolean }) {
         </Stack.Protected>
         <Stack.Protected guard={signedIn && !hasName}>
           <Stack.Screen name="name" options={{ animation: "fade", gestureEnabled: false }} />
+        </Stack.Protected>
+        <Stack.Protected guard={signedIn && hasName && needsPin}>
+          <Stack.Screen name="create-pin" options={{ animation: "fade", gestureEnabled: false }} />
         </Stack.Protected>
         <Stack.Protected guard={!signedIn}>
           <Stack.Screen name="(auth)" options={{ animation: "fade" }} />

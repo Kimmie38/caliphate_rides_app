@@ -1,6 +1,6 @@
 import { ENV } from "../config/env";
 import { t } from "../i18n";
-import { deviceId } from "../lib/device";
+import { deviceId, deviceName } from "../lib/device";
 
 let authToken: string | null = null;
 export const setAuthToken = (t: string | null) => { authToken = t; };
@@ -31,6 +31,7 @@ export async function api<T>(path: string, { method = "GET", body, signal }: Opt
         Accept: "application/json",
         ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
         ...(device ? { "X-Device-Id": device } : {}),
+        ...(deviceName() ? { "X-Device-Name": deviceName() } : {}),
       },
       body: body === undefined ? undefined : JSON.stringify(body),
     });

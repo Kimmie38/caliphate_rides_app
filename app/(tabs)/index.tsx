@@ -77,7 +77,7 @@ export default function Home() {
         <Glass style={{ flex: 1, borderRadius: 999, paddingVertical: 6, paddingLeft: 6, paddingRight: 16, flexDirection: "row", alignItems: "center", gap: 10 }}>
           <Avatar name={user?.name ?? ""} size={36} />
           <View style={{ flex: 1, minWidth: 0 }}>
-            <Txt style={{ fontFamily: fonts.display, fontSize: 14 }} numberOfLines={1}>{t("Sannu, {0}", firstName)}</Txt>
+            <Txt style={{ fontFamily: fonts.display, fontSize: 14 }} numberOfLines={1}>{t("Hello, {0}", firstName)}</Txt>
             <Txt variant="caption" color="muted" numberOfLines={1} style={{ fontSize: 12 }}>{pickup?.subtitle ?? t("Finding you…")}</Txt>
           </View>
         </Glass>

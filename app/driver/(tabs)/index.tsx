@@ -151,7 +151,7 @@ export default function Drive() {
             ) : null}
             <GoButton onPress={goOnline} disabled={!!blockers.length} />
             <View style={{ alignItems: "center", gap: 4, marginTop: 4 }}>
-              <Txt variant="title">{t("Sannu, {0}. You're offline", firstName)}</Txt>
+              <Txt variant="title">{t("Hello, {0}. You're offline", firstName)}</Txt>
               <Txt color="muted" align="center">{vehicleType === "keke" ? t("Tap GO to get keke requests near you") : t("Tap GO to get car requests near you")}</Txt>
             </View>
             <View style={{ flexDirection: "row", gap: 10 }}>

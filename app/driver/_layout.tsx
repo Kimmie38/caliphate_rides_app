@@ -57,6 +57,7 @@ function DriverStack() {
         <Stack.Screen name="profile" />
         <Stack.Screen name="settings" />
         <Stack.Screen name="delete-account" />
+        <Stack.Screen name="change-pin" />
       </Stack.Protected>
       <Stack.Protected guard={stage === "review" || stage === "fixing" || stage === "active"}>
         <Stack.Screen name="application" options={{ animation: "fade" }} />

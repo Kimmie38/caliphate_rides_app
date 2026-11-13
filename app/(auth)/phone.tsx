@@ -22,7 +22,8 @@ const CHECK_SECONDS = 10;
  *  1. type the number;
  *  2. check it on its own screen ("Edit number", and Continue after a few seconds). Nothing is sent
  *     to the server until Continue;
- *  3. the code arrives (a notification from the app, or SMS) and the next screen takes it.
+ *  3. a new number gets a code (a notification from the app) and then creates a PIN; a number that
+ *     already has an account signs in with its 4-digit PIN instead.
  */
 export default function PhoneSignIn() {
   useI18n();
@@ -55,8 +56,10 @@ export default function PhoneSignIn() {
     setError(null);
     setLoading(true);
     try {
-      const delivery = await sendSignInCode(phone);
-      router.push({ pathname: "/(auth)/verify", params: { phone, delivery } });
+      const r = await sendSignInCode(phone);
+      // Signed up before with a PIN: enter it (no code). Otherwise: the code screen.
+      if (r.delivery === "pin") router.push({ pathname: "/(auth)/pin", params: { phone, phoneName: r.phoneName ?? "" } });
+      else router.push({ pathname: "/(auth)/verify", params: { phone, delivery: r.delivery, phoneName: r.phoneName ?? "" } });
     } catch (e: any) {
       setError(e?.message ?? t("Couldn't send the code. Try again."));
     } finally {
