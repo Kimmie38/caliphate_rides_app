@@ -22,7 +22,6 @@ export type User = {
   id: string; phone: string; name: string; rating?: number;
   email?: string;
   /** The email this person can sign in with (confirmed with a code). */
-  signInEmail?: string;
   /** The app language saved on the server ("en" or "ha"). */
   language?: "en" | "ha";
   /** When the account was created (ISO date). */

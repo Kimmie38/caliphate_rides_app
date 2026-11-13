@@ -10,8 +10,6 @@ export default function AuthLayout() {
     <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.paper } }}>
       <Stack.Screen name="welcome" />
       <Stack.Screen name="verify" />
-      <Stack.Screen name="whatsapp" />
-      <Stack.Screen name="email" />
       <Stack.Screen name="phone" />
     </Stack>
   );

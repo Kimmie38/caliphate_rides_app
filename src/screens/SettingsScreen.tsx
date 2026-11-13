@@ -9,6 +9,7 @@ import { Card, Group } from "../components/visual";
 import { BRAND } from "../config/brand";
 import { LANGS, t, useI18n, type Lang } from "../i18n";
 import { goBack } from "../lib/nav";
+import { router } from "expo-router";
 import { useTheme, type ThemeMode } from "../theme/ThemeProvider";
 import { fonts } from "../theme/tokens";
 
@@ -98,6 +99,15 @@ export function SettingsScreen({ who, back }: { who: "rider" | "driver"; back: "
             onPress={() => Linking.openURL(`tel:${BRAND.supportPhone.replace(/\s/g, "")}`)} />
           <SettingRow icon="shield" tone="green" title={t("Your data")} detail={t("Kept private. Only Caliphate Rides staff can see it.")} />
           <SettingRow icon="info" tone="school" title={BRAND.name} detail={t("Version {0}", version)} />
+        </Group>
+      </Animated.View>
+
+      {/* Account (Apple and Google require a way to delete it from inside the app) */}
+      <Animated.View entering={FadeInDown.duration(350).delay(180)} style={{ gap: 10 }}>
+        <Txt variant="heading">{t("Your account")}</Txt>
+        <Group>
+          <SettingRow icon="close" danger title={t("Delete account")} detail={t("Remove your account and personal details")}
+            onPress={() => router.push(who === "driver" ? "/driver/delete-account" : "/delete-account")} />
         </Group>
       </Animated.View>
     </ScrollView>

@@ -73,19 +73,6 @@ function Header({ back }: { back: "/(tabs)/account" | "/driver/account" }) {
   );
 }
 
-/** The email someone can sign in with (besides WhatsApp), or a way to add one. */
-function SignInEmailRow({ href }: { href: "/sign-in-email" | "/driver/sign-in-email" }) {
-  const { user } = useSession();
-  return (
-    <Group>
-      <SettingRow icon="mail" tone="school"
-        title={user?.signInEmail ? t("Sign-in email") : t("Add a sign-in email")}
-        detail={user?.signInEmail || t("Sign in with a code by email, as well as WhatsApp")}
-        onPress={() => router.push(href)} />
-    </Group>
-  );
-}
-
 /** Saves name and email; shows a "Saved" line for a moment. */
 function useProfileForm(editName: boolean) {
   const { user, updateUser } = useSession();
@@ -161,12 +148,11 @@ export function RiderProfile() {
             <Field label={t("Email (optional)")} value={form.email} onChangeText={(v) => { form.setEmail(v); form.setErrors({}); }}
               autoCapitalize="none" autoComplete="email" keyboardType="email-address" textContentType="emailAddress" placeholder="name@example.com"
               error={form.errors.email} hint={t("For receipts and account messages.")} />
-            <LockedRow label={t("Phone number")} value={u ? formatNgPhone(u.phone) : ""} note={t("You sign in with this number on WhatsApp. To change it, call support.")} />
+            <LockedRow label={t("Phone number")} value={u ? formatNgPhone(u.phone) : ""} note={t("You sign in with this number. To change it, call support.")} />
           </Card>
         </Animated.View>
 
         <Animated.View entering={FadeInDown.duration(350).delay(90)}>
-          <SignInEmailRow href="/sign-in-email" />
         </Animated.View>
 
         <SaveBar form={form} />
@@ -225,12 +211,11 @@ export function DriverProfile() {
             <Field label={t("Email (optional)")} value={form.email} onChangeText={(v) => { form.setEmail(v); form.setErrors({}); }}
               autoCapitalize="none" autoComplete="email" keyboardType="email-address" textContentType="emailAddress" placeholder="name@example.com"
               error={form.errors.email} hint={t("For payout receipts and account messages.")} />
-            <LockedRow label={t("Phone number")} value={u ? formatNgPhone(u.phone) : ""} note={t("You sign in with this number on WhatsApp.")} />
+            <LockedRow label={t("Phone number")} value={u ? formatNgPhone(u.phone) : ""} note={t("You sign in with this number. To change it, call driver support.")} />
           </Card>
         </Animated.View>
 
         <Animated.View entering={FadeInDown.duration(350).delay(100)}>
-          <SignInEmailRow href="/driver/sign-in-email" />
         </Animated.View>
 
         <SaveBar form={form} />

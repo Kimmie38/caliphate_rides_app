@@ -59,8 +59,7 @@ function Root({ fontsLoaded }: { fontsLoaded: boolean }) {
   const ready = fontsLoaded && status !== "loading" && modeReady && langReady;
   const signedIn = status === "signedIn";
   const hasName = !!user?.name;
-  const hasPhone = !!user?.phone; // accounts made by email add a phone (with WhatsApp) before riding or driving
-  const set = signedIn && hasName && hasPhone; // ready to choose, ride or drive
+  const set = signedIn && hasName; // ready to choose, ride or drive
 
   useEffect(() => {
     if (ready) SplashScreen.hideAsync().catch(() => {});
@@ -88,7 +87,7 @@ function Root({ fontsLoaded }: { fontsLoaded: boolean }) {
           <Stack.Screen name="ride/complete" options={{ gestureEnabled: false, animation: "fade" }} />
           <Stack.Screen name="profile" />
           <Stack.Screen name="settings" />
-          <Stack.Screen name="sign-in-email" />
+          <Stack.Screen name="delete-account" />
         </Stack.Protected>
         <Stack.Protected guard={set && mode === "driver"}>
           <Stack.Screen name="driver" options={{ animation: "fade" }} />
@@ -98,9 +97,6 @@ function Root({ fontsLoaded }: { fontsLoaded: boolean }) {
         </Stack.Protected>
         <Stack.Protected guard={signedIn && !hasName}>
           <Stack.Screen name="name" options={{ animation: "fade", gestureEnabled: false }} />
-        </Stack.Protected>
-        <Stack.Protected guard={signedIn && hasName && !hasPhone}>
-          <Stack.Screen name="add-phone" options={{ animation: "fade", gestureEnabled: false }} />
         </Stack.Protected>
         <Stack.Protected guard={!signedIn}>
           <Stack.Screen name="(auth)" options={{ animation: "fade" }} />

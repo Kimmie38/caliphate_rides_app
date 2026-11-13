@@ -1,4 +1,4 @@
-import * as SecureStore from "expo-secure-store";
+import { secureStore } from "../lib/secureStore";
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { ENV } from "../config/env";
 import { getMe } from "../services/auth";
@@ -25,8 +25,8 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     (async () => {
       try {
-        const token = await SecureStore.getItemAsync(TOKEN_KEY);
-        const cached = await SecureStore.getItemAsync(USER_KEY);
+        const token = await secureStore.get(TOKEN_KEY);
+        const cached = await secureStore.get(USER_KEY);
         if (!token) return setStatus("signedOut");
         setAuthToken(token);
         let u: User | null = cached ? JSON.parse(cached) : null;
@@ -52,8 +52,8 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
 
   const clear = async () => {
     setAuthToken(null);
-    await SecureStore.deleteItemAsync(TOKEN_KEY).catch(() => {});
-    await SecureStore.deleteItemAsync(USER_KEY).catch(() => {});
+    await secureStore.remove(TOKEN_KEY).catch(() => {});
+    await secureStore.remove(USER_KEY).catch(() => {});
   };
 
   const value = useMemo<SessionValue>(
@@ -62,13 +62,13 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       user,
       signIn: async (token, u) => {
         setAuthToken(token);
-        await SecureStore.setItemAsync(TOKEN_KEY, token);
-        await SecureStore.setItemAsync(USER_KEY, JSON.stringify(u));
+        await secureStore.set(TOKEN_KEY, token);
+        await secureStore.set(USER_KEY, JSON.stringify(u));
         setUser(u);
         setStatus("signedIn");
       },
       updateUser: async (u) => {
-        await SecureStore.setItemAsync(USER_KEY, JSON.stringify(u));
+        await secureStore.set(USER_KEY, JSON.stringify(u));
         setUser(u);
       },
       signOut: async () => {

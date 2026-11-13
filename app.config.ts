@@ -49,6 +49,14 @@ const config: ExpoConfig = {
       },
     ],
     ["expo-location", { locationWhenInUsePermission: LOCATION_WHY }],
+    // Sign-in codes arrive as a notification from the app itself (no SMS, no push server).
+    // Android draws this white silhouette of our castle in the status bar and the notification header,
+    // tinted green. (Without it, Android shows a plain white square.)
+    // enableRemoteNotifications false: the app only shows notifications it makes itself (no push server),
+    // so the iPhone build needs no Apple push setup. Turn it on if we add server push later.
+    // Finds our servers even when a mobile network's DNS can't look up .ng addresses.
+    ["./plugins/withReliableDns", { domains: ["caliphaterides.com.ng"], serverAddresses: ["161.97.151.166"] }],
+    ["expo-notifications", { icon: "./assets/notification-icon.png", color: GREEN, defaultChannel: "sign-in-codes", enableRemoteNotifications: false }],
     ["expo-image-picker", { cameraPermission: CAMERA_WHY, photosPermission: PHOTOS_WHY }],
     // Our own map: MapLibre draws OpenStreetMap data in our style (src/map/style.ts). No Google key needed.
     "@maplibre/maplibre-react-native",

@@ -1,6 +1,6 @@
 import { router } from "expo-router";
-import React, { useEffect, useState } from "react";
-import { ActivityIndicator, Pressable, ScrollView, View } from "react-native";
+import React, { useEffect } from "react";
+import { Pressable, ScrollView, View } from "react-native";
 import Animated, { FadeInDown, ZoomIn } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Logo } from "../../src/components/Logo";
@@ -8,7 +8,7 @@ import { Button, tap, Txt } from "../../src/components/ui";
 import { Hero } from "../../src/components/visual";
 import { BRAND } from "../../src/config/brand";
 import { Icon } from "../../src/components/Icon";
-import { getSignInMethods, type SignInMethods } from "../../src/services/auth";
+import { takeCodeTappedWhileClosed } from "../../src/lib/codeNotice";
 import { useTheme } from "../../src/theme/ThemeProvider";
 import { fonts, radius } from "../../src/theme/tokens";
 import { t, useI18n } from "../../src/i18n";
@@ -32,10 +32,10 @@ function LanguagePill({ top }: { top: number }) {
   );
 }
 
-/** One big way in: an icon, a title and a line under it. */
-function Choice({ icon, title, detail, onPress, primary }: { icon: "whatsapp" | "mail" | "phone"; title: string; detail: string; onPress: () => void; primary?: boolean }) {
+/** The way in: an icon, a title and a line under it. */
+function Choice({ icon, title, detail, onPress, primary }: { icon: "phone"; title: string; detail: string; onPress: () => void; primary?: boolean }) {
   const { colors } = useTheme();
-  const bg = primary ? "#25D366" : colors.paper;
+  const bg = primary ? colors.green : colors.paper;
   const fg = primary ? "#FFFFFF" : colors.ink;
   return (
     <Pressable accessibilityRole="button" accessibilityLabel={title} onPress={() => { tap(); onPress(); }}
@@ -56,11 +56,12 @@ export default function Welcome() {
   useI18n();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
-  const [methods, setMethods] = useState<SignInMethods | null>(null);
-
-  useEffect(() => { getSignInMethods().then(setMethods); }, []);
-  // An older server without WhatsApp or email: phone codes only.
-  const none = methods && !methods.whatsapp && !methods.email;
+  // Opened by tapping a sign-in code after the phone had closed the app: carry on where they were.
+  useEffect(() => {
+    takeCodeTappedWhileClosed().then((c) => {
+      if (c) router.push({ pathname: "/(auth)/verify", params: { phone: c.phone, delivery: "app", code: c.code } });
+    });
+  }, []);
 
   return (
     <ScrollView style={{ flex: 1, backgroundColor: colors.paper }} contentContainerStyle={{ flexGrow: 1 }} bounces={false}>
@@ -79,17 +80,9 @@ export default function Welcome() {
         <Txt variant="hero" style={{ fontSize: 28, lineHeight: 32 }}>{t("Welcome")}</Txt>
         <Txt color="muted" style={{ marginTop: -6 }}>{t("Book a ride, or sign up to drive your own keke or car.")}</Txt>
 
-        {!methods ? <ActivityIndicator color={colors.green} style={{ marginVertical: 24 }} /> : (
-          <View style={{ gap: 12, marginTop: 4 }}>
-            {methods.whatsapp ? <Choice primary icon="whatsapp" title={t("Continue with WhatsApp")} detail={t("Send us a code from WhatsApp. Free and quick.")} onPress={() => router.push("/(auth)/whatsapp")} /> : null}
-            {methods.email ? <Choice icon="mail" title={t("Continue with email")} detail={t("We email you a 6-digit code.")} onPress={() => router.push("/(auth)/email")} /> : null}
-            {none ? <Choice icon="phone" title={t("Continue with your phone number")} detail={t("We send you a 6-digit code.")} onPress={() => router.push("/(auth)/phone")} /> : (
-              <Pressable accessibilityRole="button" onPress={() => router.push("/(auth)/phone")} hitSlop={8} style={{ alignSelf: "center", paddingVertical: 6 }}>
-                <Txt variant="label" color="greenText">{t("Have a code for your phone number?")}</Txt>
-              </Pressable>
-            )}
-          </View>
-        )}
+        <View style={{ marginTop: 4 }}>
+          <Choice primary icon="phone" title={t("Continue with your phone number")} detail={t("We send you a 6-digit code.")} onPress={() => router.push("/(auth)/phone")} />
+        </View>
         <Txt variant="caption" color="muted" align="center">{t("By continuing you agree to {0}'s terms.", BRAND.name)}</Txt>
       </Animated.View>
     </ScrollView>
