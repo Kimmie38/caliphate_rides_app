@@ -1,2 +1,0 @@
-# Skip package versions newer than 1 day (EAS Build enforces the same rule).
-minimumReleaseAge: 1440
