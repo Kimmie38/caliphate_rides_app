@@ -11,3 +11,8 @@ minimumReleaseAgeExclude:
   - expo-router
   - expo-dev-client
   - expo-web-browser
+  - babel-preset-expo
+  - "@expo/cli"
+  - "@expo/metro-config"
+  - electron-to-chromium
+  - node-releases
