@@ -1,10 +1,10 @@
 import { ENV } from "../config/env";
 import { haversineKm, type LatLng } from "../lib/geo";
+import { fetchWithRetry } from "./http";
 
 export type RouteResult = { path: LatLng[]; distanceKm: number; durationMin: number; source: "osrm" | "estimate" };
 
 const CITY_KMH = 22; // average city speed used for estimates
-const TIMEOUT_MS = 7000;
 
 /**
  * Road route between two points, from our routing server (OSRM on OpenStreetMap roads).
@@ -25,12 +25,11 @@ export async function getRoute(from: LatLng, to: LatLng): Promise<RouteResult> {
 }
 
 async function osrmRoute(base: string, from: LatLng, to: LatLng): Promise<RouteResult | null> {
-  const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), TIMEOUT_MS);
   try {
     const coords = `${from.longitude},${from.latitude};${to.longitude},${to.latitude}`;
-    const res = await fetch(`${base}/route/v1/driving/${coords}?overview=full&geometries=geojson&alternatives=false&steps=false`, { signal: ctrl.signal });
-    const json = await res.json();
+    const url = `${base}/route/v1/driving/${coords}?overview=full&geometries=geojson&alternatives=false&steps=false`;
+    const { response: res, text } = await fetchWithRetry(url);
+    const json = text ? JSON.parse(text) : null;
     const route = json?.code === "Ok" ? json.routes?.[0] : null;
     const line: [number, number][] | undefined = route?.geometry?.coordinates;
     if (route && line && line.length >= 2) {
@@ -43,8 +42,6 @@ async function osrmRoute(base: string, from: LatLng, to: LatLng): Promise<RouteR
     }
   } catch {
     // offline or server down
-  } finally {
-    clearTimeout(timer);
   }
   return null;
 }

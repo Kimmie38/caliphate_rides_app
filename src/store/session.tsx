@@ -38,7 +38,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
           setUser(u);
           setStatus("signedIn");
           if (!ENV.useMock) {
-            getMe({ timeoutMs: 15_000 })
+            getMe()
               .then(async (fresh) => { setUser(fresh); await secureStore.set(USER_KEY, JSON.stringify(fresh)).catch(() => {}); })
               .catch(async (e) => {
                 if (e instanceof ApiError && e.status === 401) { await clear(); setUser(null); setStatus("signedOut"); }
@@ -47,10 +47,10 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
           }
           return;
         }
-        // Signed in but no saved profile (rare): fetch it, but don't wait long.
+        // Signed in but no saved profile (rare): fetch it before showing signed-in state.
         if (ENV.useMock) return setStatus("signedOut");
         try {
-          const fresh = await getMe({ timeoutMs: 8_000 });
+          const fresh = await getMe();
           await secureStore.set(USER_KEY, JSON.stringify(fresh)).catch(() => {});
           setUser(fresh);
           setStatus("signedIn");

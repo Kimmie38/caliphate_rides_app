@@ -6,7 +6,7 @@ import { landmarks, setPlaces, type Landmark } from "../data/landmarks";
 import { inServiceArea, serviceBounds, serviceCenter } from "../lib/area";
 import { haversineKm, type LatLng } from "../lib/geo";
 import type { Place } from "../types";
-import { api } from "./http";
+import { api, fetchWithRetry } from "./http";
 import { t } from "../i18n";
 
 const PLACES_KEY = "cr.places.v1";
@@ -77,7 +77,8 @@ async function searchOsm(query: string, near: LatLng, signal?: AbortSignal): Pro
   const box = ENV.serviceAnywhere ? "" : `&bbox=${w},${s},${e},${n}`; // testing elsewhere: search around you
   const url = `${ENV.searchUrl}/api/?q=${encodeURIComponent(query)}&lat=${near.latitude}&lon=${near.longitude}` +
     `${box}&limit=10&lang=en`;
-  const json = await (await fetch(url, { signal })).json();
+  const { text } = await fetchWithRetry(url, { signal });
+  const json = text ? JSON.parse(text) : null;
   return (json?.features ?? [])
     .filter((f: any) => f?.geometry?.type === "Point" && f.properties?.name)
     .map((f: any): Place => {
@@ -102,7 +103,8 @@ async function searchGoogle(query: string, signal?: AbortSignal): Promise<Place[
     `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(query)}` +
     `&components=country:ng&location=${c.latitude},${c.longitude}&radius=25000&strictbounds=true` +
     `&key=${ENV.googleMapsKey}`;
-  const json = await (await fetch(url, { signal })).json();
+  const { text } = await fetchWithRetry(url, { signal });
+  const json = text ? JSON.parse(text) : null;
   return (json.predictions ?? []).slice(0, 5).map((p: any) => ({
     id: `g:${p.place_id}`,
     name: p.structured_formatting?.main_text ?? p.description,
@@ -117,7 +119,8 @@ async function searchGoogle(query: string, signal?: AbortSignal): Promise<Place[
 export async function resolvePlace(place: Place): Promise<Place> {
   if (!place.googlePlaceId) return place;
   const url = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${place.googlePlaceId}&fields=geometry&key=${ENV.googleMapsKey}`;
-  const json = await (await fetch(url)).json();
+  const { text } = await fetchWithRetry(url);
+  const json = text ? JSON.parse(text) : null;
   const loc = json?.result?.geometry?.location;
   if (!loc) throw new UserMessage(t("Couldn't find that place on the map. Try another search or drop a pin."));
   return { ...place, location: { latitude: loc.lat, longitude: loc.lng }, googlePlaceId: undefined };

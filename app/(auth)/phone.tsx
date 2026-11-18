@@ -144,7 +144,7 @@ function CheckNumber({ phone, onEdit, onContinue, loading, error }: { phone: str
           <Flag />
           <Txt variant="label" color="greenText">{code}</Txt>
         </View>
-        <Txt style={{ fontFamily: fonts.displayHeavy, fontSize, letterSpacing: 1, color: colors.ink }} maxFontSizeMultiplier={1} adjustsFontSizeToFit minimumFontScale={0.7} numberOfLines={1}>
+        <Txt style={{ fontFamily: fonts.displayHeavy, fontSize, lineHeight: Math.ceil(fontSize * 1.25), letterSpacing: 1, color: colors.ink }} maxFontSizeMultiplier={1} adjustsFontSizeToFit minimumFontScale={0.7} numberOfLines={1}>
           0{rest.join(" ")}
         </Txt>
       </View>

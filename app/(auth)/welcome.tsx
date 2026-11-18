@@ -70,7 +70,6 @@ export default function Welcome() {
         <Animated.View entering={ZoomIn.springify().damping(14)}>
           <Logo size={160} style={{ shadowColor: "#00301B", shadowOpacity: 0.35, shadowRadius: 24, shadowOffset: { width: 0, height: 10 } }} />
         </Animated.View>
-        <Txt style={{ color: "#FFFFFF", opacity: 0.9, fontFamily: fonts.bodySemi }}>{t("Keke and car rides in Sokoto, Kano, Kaduna, Abuja and Jos")}</Txt>
         <LanguagePill top={insets.top + 12} />
       </Hero>
 

@@ -813,6 +813,10 @@ export const HA: Record<string, string> = {
   "Name and phone number": "Suna da lambar waya",
   "Your name and phone number": "Sunanka da lambar wayarka",
   "The owner's name, phone number and address, a letter signed by the owner allowing you to drive the vehicle for Caliphate Rides, and a photo of the owner's government ID. This protects you and the owner if the vehicle is ever stolen or misused.": "Sunan mai abin hawa, lambar wayarsa da adireshinsa, wasikar da ya sa hannu yana ba ka izinin tuka abin hawan don Caliphate Rides, da hoton katin shaidarsa na gwamnati. Wannan yana kare ka da mai abin hawan idan aka sace shi ko aka yi amfani da shi ba daidai ba.",
+  "Network connection problem": "Matsalar haɗin intanet",
+  "This request is taking longer than expected. Tap Retry to keep trying until the connection works.": "Wannan bukatar tana daukar lokaci fiye da yadda ake tsammani. Danna Sake gwadawa don ci gaba da gwadawa har sai haɗin ya yi aiki.",
+  "This request couldn't connect. Tap Retry to try it again. If the server received it, repeating it could create a duplicate.": "Ba a iya haɗa wannan bukata ba. Danna Sake gwadawa don sake gwadawa. Idan uwar garken ta riga ta karɓa, maimaita ta na iya ƙirƙirar abu sau biyu.",
+  "Retry": "Sake gwadawa",
   "Caliphate Rides is taking too long to answer. Check your internet connection and try again.": "Caliphate Rides yana daukar lokaci da yawa kafin ya amsa. Duba intanet dinka ka sake gwadawa.",
   "OK": "To",
 };

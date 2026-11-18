@@ -76,8 +76,8 @@ export async function deleteAccount(): Promise<void> {
   await api("/me", { method: "DELETE" });
 }
 
-export async function getMe(opts: { timeoutMs?: number } = {}): Promise<User> {
-  const r = await api<{ user: User }>("/me", opts);
+export async function getMe(): Promise<User> {
+  const r = await api<{ user: User }>("/me");
   return r.user;
 }
 
